@@ -1,0 +1,57 @@
+#!/bin/sh
+
+PATH=/sbin:/bin
+
+
+STARTUP=/var/lib/ntropa/bin/startup.sh
+SHUTDOWN=/var/lib/ntropa/bin/shutdown.sh
+LOGS=/var/lib/ntropa/logs
+
+test -f ${STARTUP} || exit 0
+test -f ${SHUTDOWN} || exit 0
+test -d ${LOGS} || exit 0
+
+#if test -f /etc/default/ntropa ; then
+#. /etc/default/ntropa
+#fi
+
+NTROPA_USER=ntropa
+
+ntropaIsRunning()
+{
+  ps_log=`mktemp /var/tmp/ntropa-ps.log.XXXXXX`
+  ps u --cols 1024 -u ${NTROPA_USER} >"$ps_log"
+  ntropa_is_running="false"
+  if grep " -Dcatalina.base=$CATALINA_BASE.*-Dcatalina.home=$CATALINA_HOME.*org.apache.catalina.startup.Bootstrap" "$ps_log" >/dev/null 2>/dev/null ; then
+    ntropa_is_running="true"
+  fi
+  rm -f "$ps_log"
+  test "$ntropa_is_running" = "true"
+}
+
+
+case "$1" in
+start)
+  echo -n "Starting ntropa"
+  if ntropaIsRunning ; then
+    echo -n " (It was already running)"
+  else
+    su ${NTROPA_USER} -s /bin/bash -c "${STARTUP}" >"${LOGS}/start.log" 2>&1
+  fi
+  echo "."
+  ;;
+stop)
+  echo -n "Stopping ntropa"
+  if ntropaIsRunning ; then
+    su ${NTROPA_USER} -s /bin/bash -c "${SHUTDOWN}" >"${LOGS}/stop.log" 2>&1
+  else
+    echo -n " (It was not running)"
+   fi
+  echo "."
+  ;;
+*)
+  echo "Usage: /etc/init.d/ntropa {start|stop}"
+  exit 1
+esac
+
+exit 0

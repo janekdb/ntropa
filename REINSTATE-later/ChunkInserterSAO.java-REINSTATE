@@ -1,0 +1,64 @@
+/*
+ * ChunkInserterSAO.java
+ *
+ * Created on 12 December 2002, 16:30
+ */
+
+package com.studylink.sao.common;
+
+import java.io.File ;
+
+import com.studylink.utility.FileUtilities ;
+import com.studylink.utility.StringUtilities ;
+
+import com.studylink.sao.BaseServerActiveObject;
+import com.studylink.sao.InvocationContext ;
+
+/**
+ * This SAO writes a chunk of text as it's output. All child elements
+ * are ignored.
+ * <p>
+ * It was first used to integrate the Guardian 'courses skeleton' by
+ * copying a file from /opt/xl/work/fragments
+ *
+ * @author  jdb
+ * @version $Id: ChunkInserterSAO.java,v 1.1 2002/12/12 17:19:45 jdb Exp $
+ */
+public class ChunkInserterSAO extends BaseServerActiveObject {
+    
+    private String fragmentName = null ;
+    
+    public void setFragmentName ( String fragmentName ) {
+        
+        StringUtilities.validateNonZeroLength ( fragmentName ) ;
+        
+        if ( ! StringUtilities.isSubset ( fragmentName, "abcdefghijklmnopqrstuvwxyz-" ) )
+            throw new IllegalArgumentException ( "Dissallowed characters were present: " + fragmentName ) ;
+        
+        this.fragmentName = fragmentName ;
+    }
+    
+    private String getFragmentName () {
+        
+        if ( fragmentName == null )
+            throw new IllegalStateException ( "fragmentName had not been set" ) ;
+        
+        return fragmentName ;
+    }
+    
+    /**
+     * FIXME: This is a working sketch only. This class needs more thought. The current code is a
+     * temporary measure.
+     */
+    public void render ( InvocationContext icb ) throws Exception {
+        
+        // TODO: abstract this away
+        File fragFile = new File ( "/opt/xl/work/fragments", getFragmentName () ) ;
+        
+        if ( fragFile.canRead () )
+            icb.getJspWriter ().write ( FileUtilities.readFile ( fragFile ) ) ;
+        else
+            icb.getJspWriter ().write ( "Fragment was unreadable: " + getFragmentName () ) ;
+    }
+    
+}

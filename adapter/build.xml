@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- $Id: build.xml,v 1.43 2006/03/08 15:17:32 jdb Exp $ -->
+
+<project basedir="." default="main" name="adapter">
+
+    <!--  Reduce the number of places the class path is built. -->            
+    <path id="compile.class.path">                 
+        <pathelement location="${libraries.junit}"/>                 
+        <pathelement location="${libraries.ntropa-build}"/>
+    	<!-- Required for jboss adapter. -->
+        <pathelement location="${libraries.jboss}"/>
+    	<!-- Required for servlet adapter. -->
+    	<pathelement location="${libraries.servlet}"/>
+        <!--
+        <pathelement location="${libraries.jmxri}" />
+        <pathelement location="${libraries.jboss-system}" />
+        -->
+    </path>
+
+    <target name="main" depends="init,clean,build" description="Build everything.">
+       <antcall target="runtests"/>
+       <antcall target="jboss.jar" />
+       <antcall target="servlet.jar" />
+    </target>
+
+	<target name="multi-builder-functional-test" depends="init,build" unless="without.tests">
+        <!-- Failing or erroring tests should not stop the build because tomcat will need to
+             be shutdown after the tests have run. -->
+		<fail unless="ntropa.input-dir" message="'ntropa.input-dir' was not set"/>
+		<fail unless="ntropa.output-dir" message="'ntropa.output-dir' was not set"/>
+        <junit fork="true" haltonerror="false" haltonfailure="false" printsummary="no">
+        	<sysproperty key="ntropa.input-dir" value="${ntropa.input-dir}"/>
+        	<sysproperty key="ntropa.output-dir" value="${ntropa.output-dir}"/>
+            <classpath refid="test.class.path" />
+            <formatter type="plain" usefile="false"/>
+            <test name="tests.org.ntropa.adapter.MultiBuilderFunctionalTest"/>
+        </junit>
+	</target>
+		
+    <target name="runtests" depends="init" unless="without.tests">
+
+        <junit haltonerror="true" haltonfailure="true" printsummary="no">
+
+           <classpath refid="test.class.path" />
+
+            <!--
+                This makes all the junit output be sent to stdout
+                usefile="false"
+            -->
+            <formatter type="plain" usefile="false"/>
+
+            <!--
+            <test name=""/>
+            -->
+
+        </junit>
+        
+    </target>
+
+    <target name="init">
+        <!-- You can set up any variables you want used throughout the script here. -->
+
+        <property name="jboss.jarname" value="${libraries.ntropa-adapter-jboss}"/>
+        <property name="servlet.jarname" value="${libraries.ntropa-adapter-servlet}"/>
+
+        <property name="srcdir" value="./src"/>
+
+        <!-- ${basedir} is an absolute path. ${destdir} could be used to hand a path to a unit test. -->
+        <property name="destdir" value="${ntropa.build}/classes"/>
+
+        <mkdir dir="${destdir}"/>
+
+        <!-- The tests are not jarred so we extend the classpath for junit --> 
+        <path id="test.class.path">                 
+            <path refid="compile.class.path" />                 
+            <pathelement path="${destdir}" />
+        </path>
+
+    </target>
+    
+    <target name="build" depends="init">
+ 
+        <!-- Both srcdir and destdir should be package roots. -->
+        <!-- They could be different of course; in that case NetBeans can also be set -->
+        <!-- up to compile to a different filesystem in the same way; see Compiler Types: -->
+
+
+        <!-- See "Why 1.4 Target" in the top level build file. -->
+        <javac
+                destdir="${destdir}"
+                srcdir="${srcdir}"
+                classpathref="compile.class.path"
+                debug="${compile.debug}"
+                encoding="ISO-8859-1"
+                source="1.4"
+                target="1.4"
+        >
+
+
+            <!-- To exclude some files: -->
+            <!--
+                <exclude name="com/foo/SomeFile.java"/>
+                <exclude name="com/foo/somepackage/"/>
+            -->
+        </javac>
+
+        <!-- copy over zip files for creating test fixtures -->
+        <!--
+        <copy todir="${destdir}/tests">
+            <fileset dir="${srcdir}/tests">
+                <include name="**/*.zip"/>
+            </fileset>
+        </copy>
+        -->
+
+    </target>
+
+    <target name="clean" depends="init" description="Clean all build products.">
+        <delete>
+            <!-- leave other tiers alone -->
+            <fileset dir="${destdir}">
+                <include name="**/org/ntropa/adapter/*.class"/>
+                <!--include name="**/org/ntropa/adapter/*.zip"/-->
+            </fileset>
+            <!-- NetBeans will compile the classes to the same directory until the default is changed -->
+            <fileset dir="${srcdir}">
+                <include name="**/*.class"/>
+            </fileset>
+        </delete>
+        <!-- Deleting the jar prevents an exception (ZLIB) in the compile task. Apparently this is a bug in the JRE --> 
+        <delete file="${jboss.jarname}" />
+        <delete file="${servlet.jarname}" />
+    </target>
+
+    <!-- To make a standalone app: -->
+    <!-- 1. Create a myapp.mf manifest somewhere. -->
+    <!-- 2. Put in it: -->
+    <!--    Manifest-Version: 1.0 -->
+    <!--    Main-Class: com.foo.Main -->
+    <!-- 3. Pass to <jar>: manifest="myapp.mf" -->
+    <target name="jboss.jar" depends="init,build">
+                <!-- jar classes from com tree, omit tests -->
+                <jar
+                    jarfile="${jboss.jarname}"
+                    compress="true"
+                    basedir="${destdir}"
+                    includes="org/ntropa/adapter/jboss/**"
+                >
+                    <!--
+                    <exclude name="**/*.java"/>
+                    <exclude name="**/*.form"/>
+                    <exclude name="myapp.mf"/>
+                    <exclude name="myapp.jar"/>
+                    <exclude name="apidoc"/>
+                    -->
+                </jar>
+    </target>
+
+    <target name="servlet.jar" depends="init,build">
+                <!-- jar classes from com tree, omit tests -->
+                <jar
+                    jarfile="${servlet.jarname}"
+                    compress="true"
+                    basedir="${destdir}"
+                    includes="org/ntropa/adapter/servlet/**"
+                >
+                </jar>
+    </target>
+    
+
+</project>

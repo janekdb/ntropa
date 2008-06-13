@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="adapter/src"/>
+	<classpathentry kind="src" path="common/utility/src"/>
+	<classpathentry kind="src" path="presentation/sao/src"/>
+	<classpathentry kind="src" path="presentation/wps/src"/>
+	<classpathentry kind="lib" path="libraries/ant-ext.jar"/>
+	<classpathentry kind="lib" path="libraries/ant-optional.jar"/>
+	<classpathentry kind="lib" path="libraries/commons-collections.jar"/>
+	<classpathentry kind="lib" path="libraries/commons-lang.jar"/>
+	<classpathentry kind="lib" path="libraries/commons-logging-api.jar"/>
+	<classpathentry kind="lib" path="libraries/commons-logging.jar"/>
+	<classpathentry kind="lib" path="libraries/jakarta-oro.jar"/>
+	<classpathentry kind="lib" path="libraries/junit.jar"/>
+	<classpathentry kind="lib" path="libraries/mockobjects-core.jar"/>
+	<classpathentry kind="lib" path="libraries/mockobjects-j2ee1.3.jar"/>
+	<classpathentry kind="lib" path="libraries/Tidy.jar"/>
+	<classpathentry kind="lib" path="libraries/xercesImpl.jar"/>
+	<classpathentry kind="lib" path="libraries/xml-apis.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/opt/jboss/lib/ext/jboss.jar"/>
+	<classpathentry kind="lib" path="libraries/jsp-api.jar"/>
+	<classpathentry kind="lib" path="libraries/servlet-api.jar"/>
+	<classpathentry kind="output" path="build/classes"/>
+</classpath>

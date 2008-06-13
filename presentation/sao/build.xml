@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Author: JDB, 01-11-16. Based on xl/presentation/wps -->
+<!-- $Id: build.xml,v 1.54 2006/05/16 14:06:51 jdb Exp $ -->
+
+<project basedir="." default="main" name="server-active-objects">
+
+    <!-- Don't worry if you don't know the Ant syntax completely or need help on some tasks! -->
+    <!-- The standard Ant documentation is bundled. See Help | Shortcuts | Ant 1.3 Documentation. -->
+
+    <!--  Reduce the number of places the class path is built. -->            
+    <path id="compile.class.path">                 
+        <pathelement location="${libraries.junit}"/>                 
+
+        <pathelement location="${libraries.ntropa-utility}"/>                 
+
+        <pathelement location="${libraries.servlet}"/>                 
+        <pathelement location="${libraries.jsp}"/>                 
+        <pathelement location="${libraries.commons-collections}" />
+        <!--pathelement location="${libraries.commons-logging}" /-->
+        <pathelement location="${libraries.commons-lang}" />
+        <!--pathelement location="${libraries.commons-logging-api}" /-->
+
+        <pathelement location="${libraries.mockobjects-core}" />
+        <pathelement location="${libraries.mockobjects-j2ee1.3}" />
+
+
+<!-- the addition of axis prevented this exception
+    [javac] An exception has occurred in the compiler (1.3.1_04). Please file a bug at the Java Developer Connection (http://java.sun.com/cgi-bin/bugreport.cgi).  Include your program and the following diagnostic in your report.  Thank you.
+    [javac] com.sun.tools.javac.v8.code.Symbol$CompletionFailure: file org/apache/axis/AxisFault.class not found
+    [javac]     at com.sun.tools.javac.v8.code.ClassReader.fillIn(ClassReader.java:997)
+    [javac]     at com.sun.tools.javac.v8.code.ClassReader.complete(ClassReader.java:952)
+    [javac]     at com.sun.tools.javac.v8.code.Symbol.complete(Symbol.java:366)
+-->
+        <!--pathelement location="${libraries.axis}"/-->                 
+
+        <!--
+        On gandalf in /usr/local/ant
+            crimson.jar
+            jaxp.jar
+        were replaced with
+            xalan.jar
+            xml-apis.jar
+            xercesImpl.jar
+        and MbaInfoRendererSAOTest started working. The pathelements below
+        were an earler unsuccessful attempt to solve the classloader issue.
+
+        <pathelement location="${libraries.xerces-impl}" />
+        <pathelement location="${libraries.xml-apis}" />
+        <pathelement location="${libraries.xalan}" />
+        -->
+
+    </path>
+
+    <!-- The tests are not jarred so we extend the classpath for junit --> 
+    <path id="test.class.path">                 
+        <path refid="compile.class.path" />                 
+        <pathelement path="${destdir}" />
+        <!--pathelement location="${libraries.junit}" /-->
+    </path>
+
+    <!-- TODO: Stop duplicating this path definition. It is defined in /build.xml as well. -->
+    <path id="cobertura.classpath">
+        <fileset dir="${cobertura.dir}">
+            <include name="cobertura.jar"/>
+            <include name="lib/**/*.jar"/>
+        </fileset>
+    </path>
+    
+    <target name="main" depends="init,clean,build" description="Build everything and run tests.">
+        <!--
+        <echo message="${applicationtierdir}"/>
+        <echo message="${java.class.path}"/>
+        -->
+        <antcall target="jar" />
+        <antcall target="runtests"/>
+       
+    </target>
+
+    <!-- when ant 1.5.1 use filtertrace="yes" -->
+    <target name="runtests" depends="init" unless="without.tests">
+	    
+	<!-- fork="yes" added for Cobertura. -->
+        <junit fork="yes" haltonerror="true" haltonfailure="true" printsummary="no">
+           <!-- fork="yes" includeantruntime="false" need 1.5.1 for includeantruntime? -->
+
+	   <!--
+	       Specify the name of the coverage data file to use.
+	       The value specified below is the default.
+	       -->
+	   <sysproperty key="net.sourceforge.cobertura.datafile" file="${cobertura-datafile}" />
+	   
+	   <!--
+	       The instrumented classes reference classes used by the
+	       Cobertura runtime, so Cobertura and its dependencies
+	       must be on your classpath.
+	       -->
+	   <classpath refid="cobertura.classpath" />
+           
+	   <!-- To debug uncomment these and add fork="yes" to junit -->
+           <!-- jvmarg value="-classic" /-->
+           <!-- vmarg value="-Xdebug" /-->
+           <!-- jvmarg value="-Xnoagent" /-->
+           <!-- jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,address=16001,suspend=y" /-->
+
+           <classpath refid="test.class.path" />
+
+
+          <!--
+                This allows tests to locate their test files,
+                We only define one directory.
+           -->
+           <sysproperty   key = "sao.package.dir"
+                        value = "${destdir}/tests/org/ntropa/runtime/sao"/>
+
+           <!--
+                This makes all the junit output be sent to stdout
+                usefile="false"
+           -->
+           <formatter type="plain" usefile="false"/>
+
+           <test name="tests.org.ntropa.runtime.sao.util.DefaultingSelectByRequestAttributeSAOTest"/>
+           <test name="tests.org.ntropa.runtime.sao.StandardInvocationContextTest"/>
+           <!-- REINSTATE: test name="tests.org.ntropa.runtime.sao.common.PagePickerSAOTest"/-->
+
+
+           <test name="tests.org.ntropa.runtime.sao.AbstactServerActiveObjectTest"/>
+           <test name="tests.org.ntropa.runtime.sao.AbstactContainerTest"/>
+           <test name="tests.org.ntropa.runtime.sao.PlaceholderReplacementStackTest"/>
+           <test name="tests.org.ntropa.runtime.sao.PlaceholderFunctionalTest"/>
+           <test name="tests.org.ntropa.runtime.sao.StandardFragmentTest"/>
+
+        </junit>
+    </target>
+
+    <target name="init">
+        <!-- You can set up any variables you want used throughout the script here. -->
+ 
+        <property name="jarname" value="${libraries.ntropa-runtime}"/>
+
+        <property name="srcdir" value="./src"/>
+
+        <!-- ntropa.build is based on basedir and is an absolute path. ${destdir} is used to hand a path to a unit test. -->
+        <property name="destdir" value="${ntropa.build}/classes"/>
+         
+        <mkdir dir="${destdir}"/>
+
+    </target>
+
+    
+    <target name="build" depends="init">
+
+      <antcall target="compile" />
+      <antcall target="instrument" />
+
+    </target>
+
+    <target name="instrument" if="with.coverage">
+
+        <echo message="Instrumenting classes"/>
+        <!-- todir is not specified so the classes are instrumented in place. -->
+        <cobertura-instrument datafile="${cobertura-datafile}">
+            <fileset dir="${destdir}">
+                <!--include name="org/ntropa/runtime/**/*.class"/-->
+		<!-- include name="org/ntropa/runtime/sao/StandardInvocationContext.class"/-->
+		<exclude name="org/ntrop/runtime/sao/BaseServerActiveObject.class"/>
+            </fileset>
+        </cobertura-instrument>
+
+    </target>
+
+    <target name="compile">
+
+        <!-- Both srcdir and destdir should be package roots. -->
+        <!-- They could be different of course; in that case NetBeans can also be set -->
+        <!-- up to compile to a different filesystem in the same way; see Compiler Types: -->
+
+
+         <javac
+                destdir="${destdir}"
+                srcdir="${srcdir}"
+                classpathref="compile.class.path"
+                deprecation="on"
+		debug="${compile.debug}">
+
+
+            <!-- To exclude some files: -->
+            <!--
+                <exclude name="com/foo/SomeFile.java"/>
+                <exclude name="com/foo/somepackage/"/>
+            -->
+        </javac>
+
+	
+    </target>
+
+    <target name="clean" depends="init" description="Clean all build products.">
+        <!-- leave other tiers alone -->
+        <delete dir = "${destdir}/org/ntropa/runtime/sao"/>
+        <delete dir = "${destdir}/tests/org/ntropa/runtime/sao"/>
+        <delete>
+            <!-- NetBeans will compile the classes to the same directory until the default is changed -->
+            <fileset dir="${srcdir}">
+                <include name="**/*.class"/>
+            </fileset>
+        </delete>
+        <!-- Deleting the jar prevents an exception (ZLIB) in the compile task. Apparently this is a bug in the JRE --> 
+        <delete file="${jarname}" />
+    </target>
+
+    <target name="jar" depends="init,build">
+                <!-- jar classes from com tree, omit tests -->
+                <jar
+                    jarfile="${jarname}"
+                    compress="true"
+                    basedir="${destdir}"
+                    includes="org/ntropa/runtime/sao/**"
+                >
+                    <!--
+                    <exclude name="**/*.java"/>
+                    <exclude name="**/*.form"/>
+                    <exclude name="myapp.mf"/>
+                    <exclude name="myapp.jar"/>
+                    <exclude name="apidoc"/>
+                    -->
+                </jar>
+    </target>
+    
+</project>

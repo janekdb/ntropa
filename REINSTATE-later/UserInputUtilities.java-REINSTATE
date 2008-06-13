@@ -1,0 +1,210 @@
+/*
+ * Copyright 2001-2006 LEARNING INFORMATION SYSTEMS PTY LIMITED
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * UserInputUtilities.java
+ *
+ * Created on 10 December 2001, 12:34
+ */
+
+package com.studylink.utility;
+
+import java.text.ParseException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+
+/**
+ * 
+ * @author rj
+ * @version $Id: UserInputUtilities.java,v 1.15 2005/10/21 15:31:41 jdb Exp $
+ */
+public class UserInputUtilities {
+
+	private static final Pattern EMAIL_PATTERN = Pattern.compile("[^@ ,]+@[^@ ,]+\\.[^@ ,]+");
+
+	/**
+	 * This needs to be replaced with a better method. commons-validator is an
+	 * option
+	 */
+	public static boolean wellFormedEmail(String email) {
+
+		if (email == null)
+			return false;
+		// if (email.length () < 5)
+		// return false ;
+		// int atIdx = email.indexOf ('@') ;
+		// if ( atIdx == -1)
+		// return false ;
+		//        
+		// /* At least one dot after @x */
+		// if ( ! ( email.lastIndexOf ( '.' ) > atIdx + 1 ) )
+		// return false ;
+		
+		/*
+		 * This regex technique was an improvement over the commented out
+		 * code above.
+		 */
+		Matcher m = EMAIL_PATTERN.matcher(email);
+		if (!m.matches())
+			return false;
+
+		/* This can only increase the number that are rejected. */
+		try {
+			InternetAddress emailAddr = new InternetAddress(email);
+		} catch (AddressException ex) {
+			return false;
+		}
+
+		return true;
+
+	}
+
+	public static boolean wellFormedDate(String date) {
+
+		if (date == null)
+			throw new IllegalArgumentException("date was null");
+
+		/* otherwise 22/04/1978 would be accepted */
+		if (date.length() != 8)
+			return false;
+
+		Date d = null;
+		try {
+			d = DateUtils.getStandardDateFormat().parse(date);
+		} catch (ParseException e) {
+		}
+
+		return d != null;
+	}
+
+	/**
+	 * Given the return from HttpServletRequest.getParameterValues ( PARAM_NAME ),
+	 * this method returns a List of values. null is handled.
+	 * 
+	 * @param arrayOfValues
+	 *            a possibly null reference to a String array
+	 * @return A <code>List</code> containing all the values found in the
+	 *         array
+	 */
+	public static List asList(String[] arrayOfValues) {
+		return arrayOfValues != null ? Arrays.asList(arrayOfValues) : Collections.EMPTY_LIST;
+	}
+
+	/**
+	 * Given a list of submitted codes, a List of valid codes, and a Set, set
+	 * the Set to be all valid submitted codes.
+	 * 
+	 * @param submitted
+	 *            A <code>List</code> of candidate codes
+	 * @param valid
+	 *            A <code>List</code> of valid codes
+	 * @param collected
+	 *            The <code>Set</code> which is modified to contains all the
+	 *            valid codes found in the candidate list.
+	 */
+	public static void collectValidCodes(List submitted, List valid, Set collected) {
+		if (submitted == null)
+			throw new IllegalArgumentException("UserInputUtilities.collectValidCodes: 'submitted' was null");
+		if (valid == null)
+			throw new IllegalArgumentException("UserInputUtilities.collectValidCodes: 'valid' was null");
+		if (collected == null)
+			throw new IllegalArgumentException("UserInputUtilities.collectValidCodes: 'collected' was null");
+
+		collected.clear();
+
+		for (int i = 0; i < valid.size(); i++) {
+			if (submitted.contains(valid.get(i)))
+				collected.add(valid.get(i));
+		}
+
+	}
+
+	/**
+	 * Given a list of submitted codes, a List of valid codes, and a Set, set
+	 * the Set to be all valid submitted codes.
+	 * 
+	 * @param submitted
+	 *            A <code>List</code> of candidate codes
+	 * @param valid
+	 *            A <code>List</code> of valid codes
+	 * @param collected
+	 *            The <code>Set</code> which is modified to contains all the
+	 *            valid codes found in the candidate list.
+	 */
+	public static void collectCodesWithValidPrefixes(List submitted, List valid, Set collected) {
+		if (submitted == null)
+			throw new IllegalArgumentException("UserInputUtilities.collectValidCodes: 'submitted' was null");
+		if (valid == null)
+			throw new IllegalArgumentException("UserInputUtilities.collectValidCodes: 'valid' was null");
+		if (collected == null)
+			throw new IllegalArgumentException("UserInputUtilities.collectValidCodes: 'collected' was null");
+
+		collected.clear();
+
+		/*
+		 * Add a item from submitted to collected if <i>a)</i>The item is
+		 * present in validCodes <i>b)</i>Atleast one of the validCodes is a
+		 * prefix of it
+		 * 
+		 */
+		for (int j = 0; j < submitted.size(); j++) {
+			for (int i = 0; i < valid.size(); i++) {
+				if (submitted.contains(valid.get(i)) || ((String) submitted.get(j)).startsWith((String) valid.get(i)))
+					collected.add(submitted.get(j));
+
+			}
+		}
+	}
+
+	/**
+	 * Given a list of submitted codes, a Set of valid codes, and a Set, set the
+	 * Set to be all valid submitted codes.
+	 * 
+	 * @param submitted
+	 *            A <code>List</code> of candidate codes
+	 * @param valid
+	 *            A <code>Set</code> of valid codes
+	 * @param collected
+	 *            The <code>Set</code> which is modified to contains all the
+	 *            valid codes found in the candidate list.
+	 */
+	public static void collectValidCodes(List submitted, Set valid, Set collected) {
+		collectValidCodes(submitted, new LinkedList(valid), collected);
+	}
+
+	/**
+	 * Return true if the checkbox associated with the given parameter is
+	 * checked otherwise return false.
+	 * <p>
+	 * The purpose of this method is to hide the fact that the parameter value
+	 * is not submitted when the checkbox is not checked.
+	 * 
+	 * @param paramValue
+	 *            the value of the submitted parameter
+	 * @return true if the checkbox associated with the parameter was checked
+	 *         otherwise return false. / public static boolean checkboxToBoolean (
+	 *         String paramValue ) { return paramValue != null ; }
+	 */
+}

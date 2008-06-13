@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Author: JDB, 01-7-3. Based on NetBeans Ant Module template -->
+<!-- $Id: build.xml,v 1.97 2006/03/08 15:17:32 jdb Exp $ -->
+
+<project basedir="." default="main" name="presentation-tier">
+
+    <!-- Don't worry if you don't know the Ant syntax completely or need help on some tasks! -->
+    <!-- The standard Ant documentation is bundled. See Help | Shortcuts | Ant 1.3 Documentation. -->
+
+    <!--  01-10-31 jdb. -->
+    <!--  Reduce the number of places the class path is built. -->            
+    <path id="compile.class.path">                 
+        <pathelement location="${libraries.junit}"/>                 
+
+        <!--pathelement location="${libraries.ntropa-build}"/-->                 
+        <!--pathelement location="${libraries.ntropa-utility}"/-->                 
+        <pathelement location="${libraries.commons-lang}" />
+        <pathelement location="${libraries.jtidy}"/>                 
+        <pathelement location="${libraries.xerces-impl}" />                 
+        <pathelement location="${libraries.jakarta-oro}" />   
+    </path>
+
+    <!-- The tests are not jarred so we extend the classpath for junit --> 
+    <path id="test.class.path">                 
+        <path refid="compile.class.path" />                 
+        <pathelement path="${destdir}" />
+        <!--pathelement location="${libraries.junit}" /-->
+    </path>
+
+    <!-- TODO: Stop duplicating this path definition. It is defined in /build.xml as well. -->
+    <path id="cobertura.classpath">
+        <fileset dir="${cobertura.dir}">
+            <include name="cobertura.jar"/>
+            <include name="lib/**/*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="main" depends="init,clean,build" description="Build everything (classes only at the moment).">
+        <!--
+        <echo message="${applicationtierdir}"/>
+        <echo message="${java.class.path}"/>
+        -->
+        <antcall target="jar" />
+        <antcall target="runtests"/>
+       
+    </target>
+
+    <!-- The output is too messy from this form to switch yet, 02-11-1 jdb -->
+    <target name="runtests-compact-style" depends="init" unless="without.tests">
+      <property name="test.entry" value="tests.org.ntropa.build.TestAll"/>
+      <property name="test.failonerror" value="true" />
+      <property name="test.runner" value="junit.textui.TestRunner" />
+
+      <java classname="${test.runner}" fork="yes" failonerror="${test.failonerror}">
+           <arg value="${test.entry}"/>
+           <classpath refid="test.class.path" />
+
+           <!-- this allows StandardChannelMonitorTest to locate the test filesystem -->
+           <sysproperty key="standardchannelmonitor.zippath"
+                        value="${destdir}/tests/org/ntropa/build/channel/standardchannelmonitorfs.zip"/>
+
+           <!-- this allows StandardApplicationFinderTest to locate the test filesystem -->
+           <sysproperty key="standardapplicationfinder.zippath"
+                        value="${destdir}/tests/org/ntropa/build/jsp/standardapplicationfinderfs.zip"/>
+
+           <!-- this allows StandardPresentationFinderTest to locate the test filesystem -->
+           <sysproperty key="standardpresentationfinder.zippath"
+                        value="${destdir}/tests/org/ntropa/build/jsp/standardpresentationfindertestfs.zip"/>
+
+
+      </java>
+
+    </target>
+
+    <target name="runtests" depends="init" unless="without.tests">
+
+
+        <!-- fork="yes" added for Cobertura. -->
+        <junit fork="yes" haltonerror="true" haltonfailure="true" printsummary="no">
+
+           <!-- To debug uncomment these and make sure fork="yes" is used in junit -->
+           <!-- The address needs to match the address (port) used in NetBeans or other -->
+           <!-- JPDA debugger -->
+           <!-- jvmarg value="-classic" /-->
+           <!-- jvmarg value="-Xdebug" /-->
+           <!-- jvmarg value="-Xnoagent" /-->
+           <!-- jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,address=16001,suspend=y" /-->
+
+           <!--
+               Specify the name of the coverage data file to use.
+               The value specified below is the default.
+           -->
+           <sysproperty key="net.sourceforge.cobertura.datafile" file="${cobertura-datafile}" />
+
+           <!--
+               The instrumented classes reference classes used by the
+               Cobertura runtime, so Cobertura and its dependencies
+               must be on your classpath.
+           -->
+           <classpath refid="cobertura.classpath" />
+
+           <classpath refid="test.class.path" />
+
+           <sysproperty   key = "work.dir"
+                        value = "${ntropa.build.work}"/>
+
+           <!-- this allows StandardChannelMonitorTest to locate the test filesystem -->
+           <sysproperty key="standardchannelmonitor.zippath"
+                        value="${destdir}/tests/org/ntropa/build/channel/standardchannelmonitorfs.zip"/>
+
+           <!-- this allows StandardApplicationFinderTest to locate the test filesystem -->
+           <sysproperty key="standardapplicationfinder.zippath"
+                        value="${destdir}/tests/org/ntropa/build/jsp/standardapplicationfinderfs.zip"/>
+
+           <!-- this allows StandardPresentationFinderTest to locate the test filesystem -->
+           <sysproperty key="standardpresentationfinder.zippath"
+                        value="${destdir}/tests/org/ntropa/build/jsp/standardpresentationfindertestfs.zip"/>
+
+           <!-- Attempt to fix LinkageError with DigesterTest. It didn't work. fork="yes" did. -->
+           <!--sysproperty key="javax.xml.parsers.DocumentBuilderFactory"
+                        value="org.apache.xerces.jaxp.DocumentBuilderFactoryImpl"/-->
+           <!--sysproperty key="javax.xml.parsers.SAXParserFactory"
+                        value="org.apache.xerces.jaxp.SAXParserFactoryImpl"/-->
+
+
+           <!--
+                This makes all the junit output be sent to stdout
+                usefile="false"
+            -->
+           <formatter type="plain" usefile="false"/>
+
+           <!-- Section for temporarily promoted tests -->
+
+           <!-- /Section for temporarily promoted tests -->
+
+           <test name="tests.org.ntropa.build.FileChangeSetTest"/>
+           <test name="tests.org.ntropa.build.FileDescriptionListTest"/>
+           <test name="tests.org.ntropa.build.DirectoryMonitorTest"/>
+           <test name="tests.org.ntropa.build.ConstantsTest"/>
+           <test name="tests.org.ntropa.build.DirectoryPairTest"/>
+
+           <test name="tests.org.ntropa.build.main.PropertiesBuilderConfigurationTest"/>
+
+           <test name="tests.org.ntropa.build.jsp.DOMEditorTest"/>
+           <test name="tests.org.ntropa.build.html.ServerActiveHtmlTest"/>
+           <test name="tests.org.ntropa.build.html.PlaceholderTest"/>
+           <test name="tests.org.ntropa.build.ContextPathTest"/>
+           <test name="tests.org.ntropa.build.jsp.JspUtilityTest"/>
+           <test name="tests.org.ntropa.build.jsp.JSPBuilderTest"/>
+
+           <test name="tests.org.ntropa.build.html.ParsedHtmlTest"/>
+           <test name="tests.org.ntropa.build.html.FragmentTest"/>
+           <test name="tests.org.ntropa.build.html.ElementTest"/>
+           <test name="tests.org.ntropa.build.html.MarkedUpHtmlParserTest"/>
+           <test name="tests.org.ntropa.build.jsp.ScriptWriterTest"/>
+
+           <test name="tests.org.ntropa.build.jsp.StandardApplicationFinderTest"/>
+           <test name="tests.org.ntropa.build.jsp.StandardPresentationFinderTest"/>
+
+           <test name="tests.org.ntropa.build.channel.CommonRootResolverTest"/>
+           <test name="tests.org.ntropa.build.channel.FileLocationTest"/>
+           <test name="tests.org.ntropa.build.channel.StandardInputFilterTest"/>
+           <test name="tests.org.ntropa.build.channel.BuildStatusTest"/>
+           <test name="tests.org.ntropa.build.channel.StandardChannelMonitorTest"/>
+           <test name="tests.org.ntropa.build.mapper.LinkFileTest"/>
+           <test name="tests.org.ntropa.build.mapper.MapperTest"/>
+           <test name="tests.org.ntropa.build.jsp.TemplateTest"/>
+           <test name="tests.org.ntropa.build.html.ElementAttributesTest"/>
+           <test name="tests.org.ntropa.build.html.ServerActiveHtmlAttributesTest"/>
+           <test name="tests.org.ntropa.build.html.MarkUpAttributesTest"/>
+           <test name="tests.org.ntropa.build.html.ElementTest"/>
+           <test name="tests.org.ntropa.build.html.StandardFragmentTokenizerTest"/>
+
+           <!--
+                This is disabled as a simpler method was used for the reading of
+                application parameter files. See StandardApplicationFinder
+                                This one might not be used any more.
+                <test name="tests.org.ntropa.build.html.MarkedUpHtmlTest"/>
+
+                Temporary halt on these classes:
+                <test name="tests.org.ntropa.build.DirectoryPairMapTest"/>
+                <test name="tests.org.ntropa.build.FilePairTest"/>
+                <test name="tests.org.ntropa.build.FileTreeTest"/>
+            -->
+
+        </junit>
+    </target>
+
+    <target name="init">
+        <!-- You can set up any variables you want used throughout the script here. -->
+ 
+        <property name="jarname" value="${libraries.ntropa-build}"/>
+
+        <property name="srcdir" value="./src"/>
+
+        <!-- ntropa.build is based on basedir and is an absolute path. ${destdir} is used to hand a path to a unit test. -->
+        <property name="destdir" value="${ntropa.build}/classes"/>
+        
+        <!-- jdb: I'm not happy with this cross-link but haven't worked out a better way yet -->
+        <!-- maybe if a higher level build.xml is used this can be avoided -->
+        <!--property name="applicationtierdir" value="${basedir}/../../application/xl/classes"/-->
+ 
+        <mkdir dir="${destdir}"/>
+
+    </target>
+
+    <target name="build" depends="init">
+
+      <antcall target="compile" />
+      <antcall target="instrument" />
+
+    </target>
+
+    <target name="instrument" if="with.coverage">
+
+        <echo message="Instrumenting classes"/>
+        <!-- todir is not specified so the classes are instrumented in place. -->
+        <cobertura-instrument datafile="${cobertura-datafile}">
+            <fileset dir="${destdir}">
+                <include name="org/ntropa/build/**/*.class"/>
+            </fileset>
+        </cobertura-instrument>
+
+    </target>
+
+    <target name="compile">
+ 
+        <!-- Both srcdir and destdir should be package roots. -->
+        <!-- They could be different of course; in that case NetBeans can also be set -->
+        <!-- up to compile to a different filesystem in the same way; see Compiler Types: -->
+
+
+        <javac
+                destdir="${destdir}"
+                srcdir="${srcdir}"
+                classpathref="compile.class.path"
+                deprecation="on"
+                debug="${compile.debug}"
+                source="1.5"
+                target="1.5"
+        >
+            <!-- To exclude some files: -->
+            <!--
+                <exclude name="com/foo/SomeFile.java"/>
+                <exclude name="com/foo/somepackage/"/>
+            -->
+        </javac>
+
+        <!-- copy over zip files for creating test fixtures -->
+        <!-- The first class to use a zip file was FolderLinkTest.java -->
+        <copy todir="${destdir}/tests">
+            <fileset dir="${srcdir}/tests">
+                <include name="**/*.zip"/>
+                <include name="**/*.xml"/>
+            </fileset>
+        </copy>
+
+    </target>
+
+    <target name="clean" depends="init" description="Clean all build products.">
+        <delete>
+            <!-- leave other tiers alone -->
+            <fileset dir="${destdir}">
+                <include name="org/ntropa/build/"/>
+                <include name="tests/org/ntropa/build/"/>
+            </fileset>
+            <!-- NetBeans will compile the classes to the same directory until the default is changed -->
+            <fileset dir="${srcdir}">
+                <include name="**/*.class"/>
+            </fileset>
+        </delete>
+        <!-- Deleting the jar prevents an exception (ZLIB) in the compile task. Apparently this is a bug in the JRE --> 
+        <delete file="${jarname}" />
+    </target>
+
+    <target name="jar" depends="init,build">
+                <!-- jar classes from com tree, omit tests -->
+                <jar
+                    jarfile="${jarname}"
+                    compress="true"
+                    basedir="${destdir}"
+                    includes="org/ntropa/build/**"
+                >
+                    <!--
+                    <exclude name="**/*.java"/>
+                    <exclude name="**/*.form"/>
+                    <exclude name="myapp.mf"/>
+                    <exclude name="myapp.jar"/>
+                    <exclude name="apidoc"/>
+                    -->
+                </jar>
+    </target>
+    
+</project>

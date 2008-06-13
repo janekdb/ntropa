@@ -1,0 +1,24 @@
+<Server port="54381" shutdown="SHUTDOWN">
+
+  <GlobalNamingResources>
+    <!-- Used by Manager webapp -->
+    <Resource name="UserDatabase" auth="Container"
+              type="org.apache.catalina.UserDatabase"
+       description="User database that can be updated and saved"
+           factory="org.apache.catalina.users.MemoryUserDatabaseFactory"
+          pathname="conf/tomcat-users.xml" />
+  </GlobalNamingResources>
+
+  <Service name="NtropaBuilder">
+    <Connector port="54382" />
+
+    <Engine name="NtropaBuilder" defaultHost="localhost">
+      <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+             resourceName="UserDatabase" />
+      <Host name="localhost" appBase="webapps" deployOnStartup="false" autoDeploy="false">
+        <Context path="" docBase="builder.war"/>
+      </Host>
+    </Engine>
+    
+  </Service>
+</Server>

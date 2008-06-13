@@ -1,0 +1,145 @@
+/*
+ * PagePickerSAOTest.java
+ *
+ * Created on 10 March 2002, 23:07
+ */
+
+package tests.com.studylink.sao.common;
+
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import com.studylink.sao.common.PagePickerSAO;
+import com.studylink.utility.IntegerRange;
+
+/**
+ *
+ * @author  jdb
+ * @version $Id: PagePickerSAOTest.java,v 1.2 2004/11/02 17:08:51 jdb Exp $
+ */
+public class PagePickerSAOTest extends TestCase {
+
+	public PagePickerSAOTest(String testName) {
+		super(testName);
+	}
+
+	/* Comments copied from junit.framework.TestSuite. */
+
+	/**
+	 * A <code>TestSuite</code> is a <code>Composite</code> of Tests.
+	 * It runs a collection of test cases.
+	 *
+	 * This constructor creates a suite with all the methods
+	 * starting with "test" that take no arguments.
+	 */
+	public static Test suite() {
+
+		TestSuite suite = new TestSuite(PagePickerSAOTest.class);
+		return suite;
+	}
+
+	/*
+	protected void setUp() {
+	 
+	}
+	 */
+
+	/**
+	 * Tears down the fixture, for example, close a network connection.
+	 * This method is called after a test is executed.
+	 */
+	/*
+	protected void tearDown () throws Exception {
+	 */
+
+	/**
+	 * Test the Elements and pages the SAO is proposing to render.
+	 */
+	public void testRenderingChoices() {
+
+		PagePickerSAO pp = new PagePickerSAO();
+
+		/*
+		 * Just one page possible
+		 */
+		int lastPossiblePage = 1;
+		int currentPage = 1;
+
+		IntegerRange actualRange = pp.getPageRange(currentPage, lastPossiblePage);
+		assertEquals("Range was bad (1)", new IntegerRange(1, 1), actualRange);
+
+		/*
+		 * 10 pages, no next link
+		 */
+		lastPossiblePage = 10;
+		currentPage = 1;
+
+		actualRange = pp.getPageRange(currentPage, lastPossiblePage);
+		assertEquals("Range was bad (2)", new IntegerRange(1, 10), actualRange);
+
+		/*
+		* 10 pages, no next link
+		*/
+		lastPossiblePage = 10;
+		currentPage = 10;
+
+		actualRange = pp.getPageRange(currentPage, lastPossiblePage);
+		assertEquals("Range was bad (3)", new IntegerRange(1, 10), actualRange);
+
+		/*
+		 * 11 pages, next link
+		 */
+		lastPossiblePage = 11;
+		currentPage = 1;
+
+		actualRange = pp.getPageRange(currentPage, lastPossiblePage);
+		assertEquals("Range was bad (4)", new IntegerRange(1, 11), actualRange);
+
+		/*
+		* 11 pages, next link
+		*/
+		lastPossiblePage = 11;
+		currentPage = 10;
+
+		actualRange = pp.getPageRange(currentPage, lastPossiblePage);
+		assertEquals("Range was bad (5)", new IntegerRange(1, 11), actualRange);
+
+		/*
+		 * 11012 pages, next link
+		 */
+		lastPossiblePage = 11012;
+		currentPage = 10;
+
+		actualRange = pp.getPageRange(currentPage, lastPossiblePage);
+		assertEquals("Range was bad (6)", new IntegerRange(1, 11), actualRange);
+
+		/*
+		 * 103 pages, 2nd decade, previous page
+		 */
+		lastPossiblePage = 103;
+		currentPage = 11;
+
+		actualRange = pp.getPageRange(currentPage, lastPossiblePage);
+		assertEquals("Range was bad (7)", new IntegerRange(10, 21), actualRange);
+
+		/*
+		 * 103 pages, 3rd decade, previous page
+		 */
+		lastPossiblePage = 103;
+		currentPage = 25;
+
+		actualRange = pp.getPageRange(currentPage, lastPossiblePage);
+		assertEquals("Range was bad (8)", new IntegerRange(20, 31), actualRange);
+
+		/*
+		 * 103 pages, last set of pages, previous page, no next link
+		 */
+		lastPossiblePage = 103;
+		currentPage = 101;
+
+		actualRange = pp.getPageRange(currentPage, lastPossiblePage);
+		assertEquals("Range was bad (9)", new IntegerRange(100, 103), actualRange);
+
+	}
+}

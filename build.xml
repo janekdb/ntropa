@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Author: JDB, 01-9-6. -->
+<project basedir="." default="all" name="ntropa">
+
+    <!--
+        Why 1.4 Target
+
+        JBoss 2.2.x does not work with Java 5 so until the move to JBoss 4.x is completed
+        all classes that are deployed to JBoss must be compiled to 1.4.
+
+        The layers of interest that compile to 1.5 are presentation.
+
+    -->
+    
+    <target name="init">
+
+        <tstamp>
+            <format pattern="yyyy-MM-dd &apos;at&apos; hh:mm:ss zz" property="DATETIMESLUG"/>
+        </tstamp>
+        <tstamp>
+            <format pattern="yyyy-MM-dd-hh-mm-ss" property="DEPLOYSLUG"/>
+        </tstamp>
+
+        <!-- Give user a chance to override without editing this file (and without typing -D each time it compiles it from the command line -->
+        <property file="${user.home}/build.properties"/>
+        <property file="build.properties"/>
+    
+        <property name="ntropa.javadoc" value="${basedir}/doc/javadoc"/>
+
+        <property name="ntropa.build" value="${basedir}/build"/>
+        <property name="ntropa.build.work" value="${basedir}/build/work"/>
+
+        <!-- misc contains some files that do not need compile. Often they can be copied directly to deployment locations. -->
+        <property name="misc.home.dir" value="${basedir}/misc"/>
+ 
+        <!-- deployment locations -->
+        <!-- jboss.distribution.dir is defined in build.properties -->
+        <!-- catalina.home.dir is defined in build.properties -->
+        <property name="tools.home.dir" value="/opt/xl/tools"/>
+
+        <!-- compile options -->
+        <property name="compile.debug" value="on"/>
+
+        <!-- library locations -->
+        <property name="libraries.jtidy"                value="${ntropa.build}/lib/Tidy.jar"/>
+        <property name="libraries.junit"                value="${ntropa.build}/lib/junit.jar"/>
+        <property name="libraries.ant.optional"         value="${ntropa.build}/lib/ant-optional.jar"/>
+        <property name="libraries.ant.extension"        value="${ntropa.build}/lib/ant-ext.jar"/>
+        <property name="libraries.jakarta-oro"          value="${ntropa.build}/lib/jakarta-oro.jar"/>
+
+        <property name="libraries.servlet"              value="${ntropa.build}/lib/servlet-api.jar"/>
+        <property name="libraries.jsp"                  value="${ntropa.build}/lib/jsp-api.jar"/>
+        <property name="libraries.commons-collections"  value="${ntropa.build}/lib/commons-collections.jar"/>
+        <property name="libraries.commons-lang"         value="${ntropa.build}/lib/commons-lang.jar"/>
+        <!--property name="libraries.commons-logging"      value="${ntropa.build}/lib/commons-logging.jar"/-->
+        <!--property name="libraries.commons-logging-api"  value="${ntropa.build}/lib/commons-logging-api.jar"/-->
+        <property name="libraries.xerces-impl"          value="${ntropa.build}/lib/xercesImpl.jar"/>
+        <property name="libraries.xml-apis"             value="${ntropa.build}/lib/xml-apis.jar"/>
+        
+        <!-- mockobjects -->
+        <property name="libraries.mockobjects-core"       value="${ntropa.build}/lib/mockobjects-core.jar"/>
+        <property name="libraries.mockobjects-j2ee1.3"    value="${ntropa.build}/lib/mockobjects-j2ee1.3.jar"/>
+
+        <property name="libraries.ntropa-mock"          value="${ntropa.build}/lib/ntropa-mock.jar"/>
+        <property name="libraries.ntropa-utility"       value="${ntropa.build}/lib/ntropa-utility.jar"/>
+        <property name="libraries.ntropa-runtime"       value="${ntropa.build}/lib/ntropa-runtime.jar"/>
+        <property name="libraries.ntropa-build"         value="${ntropa.build}/lib/ntropa-build.jar"/>
+        <property name="libraries.ntropa-adapter-jboss" value="${ntropa.build}/lib/ntropa-adapter-jboss-2.4.jar"/>
+        <property name="libraries.ntropa-adapter-servlet" value="${ntropa.build}/lib/ntropa-adapter-servlet.jar"/>
+
+        <!-- JBoss libraries -->
+        <property name="libraries.jboss"        value="${jboss.distribution.dir}/lib/ext/jboss.jar"/>
+
+    	<!-- Tomcat hosted builder -->
+        <property name="thnb.app.dir" value="${ntropa.build}/tomcat-hosted-ntropa-builder"/>
+        <property name="thnb.tc.dir" value="${thnb.app.dir}/apache-tomcat-5.5.20"/>
+
+        <!-- Cobertura set up for code coverage. -->
+        <property name="cobertura.dir" value="${basedir}/libraries/cobertura-1.8"/>
+
+        <path id="cobertura.classpath">
+            <fileset dir="${cobertura.dir}">
+                <include name="cobertura.jar"/>
+                <include name="lib/**/*.jar"/>
+            </fileset>
+        </path>
+
+        <taskdef classpathref="cobertura.classpath" resource="tasks.properties"/>
+ 
+        <property name="cobertura-datafile" value="${ntropa.build}/cobertura.ser"/>
+    </target>
+
+    <target name="with.coverage" description="Apply code coverage">
+            <property name="with.coverage" value="true"/>
+    </target>
+
+    <target name="without.tests">
+        <property name="without.tests" value="true"/>
+    </target>
+
+    <target name="clean" depends="init" description="Remove everything created by the build process">
+        <delete dir="${ntropa.build}"/>
+    </target>
+
+    <target depends="init" name="coverage" description="Create the code coverage report">
+        <mkdir dir="${ntropa.build}/coverage"/>
+        <cobertura-report format="html" datafile="${ntropa.build}/cobertura.ser" destdir="${ntropa.build}/coverage">
+            <fileset dir="common/utility/src">
+                <include name="**/*.java"/>
+                <exclude name="**/tests/org/*.java"/>
+            </fileset>
+            <fileset dir="presentation/wps/src">
+                <include name="**/*.java"/>
+                <exclude name="**/tests/org/*.java"/>
+            </fileset>
+            <fileset dir="presentation/sao/src">
+                <include name="**/*.java"/>
+                <exclude name="**/tests/org/*.java"/>
+            </fileset>
+        </cobertura-report>
+    </target>
+
+    <target depends="init" description="Build everything" name="all">
+
+        <delete dir="${ntropa.build}"/>
+        <antcall target="prepare"/>
+
+        <!--
+             This list of tasks expresses the dependencies between the tasks,
+             tasks listed lower down are dependent on at least one task listed higher up.
+        -->
+        <antcall target="build-external-libraries"/>
+        <antcall target="build-utility"/>
+        <antcall target="build-ntropa-build"/>
+        <antcall target="build-server-active"/>
+        <antcall target="build-adapter"/>
+    </target>
+
+    <target depends="init" name="prepare">
+        <!-- Prepare common directories. -->
+        <!-- non-existent parent dirs are created -->
+        <mkdir dir="${ntropa.build}/lib"/>
+        <mkdir dir="${ntropa.build.work}"/>
+    </target>
+
+
+    <target depends="prepare" description="Build the external libraries." name="build-external-libraries">
+        <!-- This simply copies existing jars into the build directory -->
+        
+        <copy overwrite="yes" todir="${ntropa.build}/lib">
+            <fileset dir="libraries">
+                <include name="*.jar"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target depends="prepare" description="Build the utility classes." name="build-utility">
+        <ant dir="common/utility"/>
+    </target>
+
+    <target depends="prepare" description="Build the ntropa build library." name="build-ntropa-build">
+         <ant dir="presentation/wps"/>       
+    </target>
+
+    <target depends="prepare" description="Build the server active object library." name="build-server-active">
+         <ant dir="presentation/sao"/>       
+    </target>
+ 
+    <target depends="prepare" description="Build the adapter library." name="build-adapter">
+         <ant dir="adapter"/>       
+    </target>
+
+    <!--
+         Utility targets. Not build related. The inclusion of these targets is motivated by
+         Rod Johnson's observations on always using ant if there is a task you will need to do
+         more than once.
+    -->
+    
+    <target depends="init" description="Build Javadoc." name="javadoc">
+        <mkdir dir="${ntropa.javadoc}"/>
+        <javadoc
+                  bottom = "Copyright 2001-2002 Learning Information Systems. All Rights Reserved"
+                 destdir = "${ntropa.javadoc}"
+            packagenames = "org.ntropa.*"
+                 version = "yes"
+                  author = "yes"
+          stylesheetfile = "${misc.home.dir}/style/javadoc.css"
+
+        >
+
+        <sourcepath>
+            <pathelement location="./common/utility/src"/>
+            <pathelement location="./presentation/wps/src"/>
+            <pathelement location="./presentation/sao/src"/>
+            <pathelement location="./adapter/src"/>
+        </sourcepath>
+        </javadoc>
+    </target>
+
+    <target depends="init" description="Deploy ntropa jars to jboss" name="deploy-ntropa-to-jboss">
+        <!-- This copies the ntropa jars into the jboss server/default/lib/ directory -->
+        	
+        <copy file="${libraries.jakarta-oro}"           overwrite="yes" todir="${jboss.distribution.dir}/lib/ext"/>
+        <copy file="${libraries.jtidy}"                 overwrite="yes" todir="${jboss.distribution.dir}/lib/ext"/>
+
+        <!-- TODO: Remove the dependencies on collections and lang. -->
+        <copy file="${libraries.commons-collections}"   overwrite="yes" todir="${jboss.distribution.dir}/lib/ext"/>
+        <copy file="${libraries.commons-lang}"          overwrite="yes" todir="${jboss.distribution.dir}/lib/ext"/>
+
+        <copy file="${libraries.ntropa-utility}"        overwrite="yes" todir="${jboss.distribution.dir}/lib/ext"/>
+        <copy file="${libraries.ntropa-build}"          overwrite="yes" todir="${jboss.distribution.dir}/lib/ext"/>
+        <copy file="${libraries.ntropa-adapter-jboss}"  overwrite="yes" todir="${jboss.distribution.dir}/lib/ext"/>
+    </target>
+
+    <!--
+        TODO
+        Maybe remove Context.xml after checking effect of WatchedResources.
+        logging.properties: custom log for ntropa.
+        Minimise tomcat-users.xml.
+        Run with -security? If so, then secure ntropa.
+        Configure ntropa application with standalone xml Context definition?
+        What are these attributes: antiResourceLocking="false" antiJARLocking="false"?
+        Add notice to server.xml: (b) You must cause any modified files to carry prominent notices stating that You changed the files; and
+        
+        Changes
+        CHANGED: bin
+        NO CHANGE: common
+        CHANGED: conf
+        NO CHANGE: LICENSE
+        NO CHANGE: logs
+        NO CHANGE: NOTICE
+        NO CHANGE: RELEASE-NOTES
+        NO CHANGE: RUNNING.txt
+        CHANGED: server
+        NO CHANGE: shared
+        CHANGED: temp
+        CHANGED: webapps
+        NO CHANGE: work
+        
+        Submit patch that improves the catalina.sh test in startup.sh when the file is not executable. shutdown.sh as well?
+        See if this {0} is a bug: SEVERE: Exception fixing docBase: {0}
+          Reproduce by omitting builder.jar.
+    -->
+    <target name="build-tomcat-hosted-ntropa-builder"
+	    depends="init" description="Unpacks the tomcat archive and modifies it to make a hosting enviroment for the ntropa build process">
+      <!--
+        1. Unpack tomcat binary release to build.
+        2. Remove unnecessary files and directories.
+        3. Fix lost execute bits on shell scripts.
+        4. Replace or patch files and directories that need changing.
+        5. Add ntropa builder webapp as ROOT in webapps.
+      -->
+      <!--  1. Unpack tomcat binary release to build directory. -->
+      <delete dir="${thnb.app.dir}"/>
+      <echo>application directory: ${thnb.app.dir}</echo>
+      <untar src="${basedir}/apache-tomcat-5.5.20.tar.gz" compression="gzip" dest="${thnb.app.dir}"/>
+      <echo>tomcat directory: ${thnb.tc.dir}</echo>
+      <available file="${thnb.tc.dir}" property="name.check"/>	
+      <fail unless="name.check"/>
+    	
+      <!--  2. Remove unnecessary files and directories. -->
+      <property name="webapps.dir"        location="${thnb.tc.dir}/webapps"/>
+      <property name="server.webapps.dir" location="${thnb.tc.dir}/server/webapps"/>
+      <property name="conf.dir"           location="${thnb.tc.dir}/conf"/>
+      <property name="temp.dir"           location="${thnb.tc.dir}/temp"/>
+      <property name="logs.dir"           location="${thnb.tc.dir}/logs"/>
+      <property name="bin.dir"            location="${thnb.tc.dir}/bin"/>
+      
+      <available file="${webapps.dir}" property="webapps.check"/>
+      <fail unless="webapps.check" />
+      <delete dir="${webapps.dir}"/>
+      <mkdir dir="${webapps.dir}"/>
+    	
+      <available file="${server.webapps.dir}" property="server.webapps.check"/>
+      <fail unless="server.webapps.check" />
+      <delete dir="${server.webapps.dir}"/>
+    	
+      <available file="${conf.dir}" property="conf.check"/>
+      <fail unless="conf.check" />
+      <delete dir="${conf.dir}/Catalina"/>
+      <delete>
+        <fileset dir="${conf.dir}" includes="server*.xml"/>
+        <fileset dir="${conf.dir}" includes="tomcat-users.xml"/>
+      </delete>
+
+      <!-- Remove bugzilla37035-safeToDelete.tmp -->
+      <available file="${temp.dir}" property="temp.check"/>
+      <fail unless="temp.check" />
+      <delete dir="${temp.dir}"/>
+      <mkdir dir="${temp.dir}"/>
+    	
+      <!-- Remove Windows only scripts and executables. -->
+      <available file="${bin.dir}" property="bin.check"/>
+      <fail unless="bin.check"/>
+      <delete>
+      	<fileset dir="${bin.dir}" includes="*.bat"/>
+      	<fileset dir="${bin.dir}" includes="*.exe"/>
+      </delete>
+      	
+      <!--
+        The test target assumes catalina.out does not exist before tomcat starts. Even though 5.5.20
+        is distributed with an empty logs directory we clean it out just in case a later version
+        includes it.
+      -->
+      <available file="${logs.dir}" property="logs.check"/>
+      <fail unless="logs.check" />
+      <delete dir="${logs.dir}"/>
+      <mkdir dir="${logs.dir}"/>
+    	
+      <!-- 3. Fix lost execute bits on shell scripts. Ant untar does not preserve this bit.-->
+      <chmod perm="a+x" dir="${bin.dir}" includes="**/*.sh"/>
+    	
+      <!--  4. Replace or patch files and directories that need changing. -->
+      <property name="content.dir" value="${basedir}/misc/tomcat-hosting"/>
+      
+      <copy file="${content.dir}/server.xml" todir="${conf.dir}"/>
+      <copy file="${content.dir}/tomcat-users.xml" todir="${conf.dir}"/>
+      <copy file="${content.dir}/setenv.sh" todir="${bin.dir}"/>
+    	
+      <patch patchfile="${content.dir}/catalina.sh.patch" dir="${bin.dir}" />
+
+      <!--  5. Add ntropa builder war. -->
+      <available file="${libraries.ntropa-adapter-servlet}" property="servlet.check"/>
+      <fail unless="servlet.check"/>
+      <war destfile="${webapps.dir}/builder.war" webxml="${content.dir}/builder/WEB-INF/web.xml">
+      	<fileset dir="${content.dir}/jsp"/>
+      	<lib file="${libraries.ntropa-utility}"/>
+      	<lib file="${libraries.ntropa-build}"/>
+      	<lib file="${libraries.ntropa-adapter-servlet}"/>
+      	<lib file="${libraries.commons-collections}"/>
+      	<lib file="${libraries.commons-lang}"/>
+      	<lib file="${libraries.jakarta-oro}"/>
+      	<lib file="${libraries.jtidy}"/>
+      	<lib file="${libraries.xerces-impl}"/>
+      </war>
+    </target>
+	
+	<target name="test-tomcat-hosted-ntropa-builder"
+	    depends="init,build-tomcat-hosted-ntropa-builder" description="Tested the ntropa builder running in tomcat">
+		
+      <!-- Test a copy of the pristine builder. -->
+      <property name="thnb-test.tc.dir" value="${thnb.tc.dir}-test"/>
+	  <delete dir="${thnb-test.tc.dir}"/>
+      <!-- Preserve all file modes. -->
+	  <exec executable="cp">
+        <arg value="-a"/>
+	    <arg path="${thnb.tc.dir}"/>
+	    <arg path="${thnb-test.tc.dir}"/>
+	  </exec>
+
+      <!-- Add 10 to each port number. -->
+      <replace dir="${thnb-test.tc.dir}" token="5438" value="5439">
+      	<include name="**/server.xml"/>
+      </replace>
+		      
+      <property name="builder-test.dir" value="${ntropa.build}/builder-test"/>
+      <property name="input.dir" value="${builder-test.dir}/input"/>
+      <property name="link.dir" value="${builder-test.dir}/link"/>
+      <property name="output.dir" value="${builder-test.dir}/output"/>
+      <!--
+        Create a blank ntropa directory layout.
+          input/
+            master/
+            site-a/
+            site-b/
+          link/
+            master/
+            site-a/
+            site-b/
+          output/
+            master/
+            site-a/
+            site-b/
+      -->
+      <delete dir="${builder-test.dir}"/>
+      <mkdir dir="${builder-test.dir}"/>
+		
+      <mkdir dir="${input.dir}"/>
+      <mkdir dir="${link.dir}"/>
+      <mkdir dir="${output.dir}"/>
+		
+      <mkdir dir="${input.dir}/master"/>
+      <mkdir dir="${link.dir}/master"/>
+      <mkdir dir="${output.dir}/master"/>
+		
+      <mkdir dir="${input.dir}/site-a"/>
+      <mkdir dir="${link.dir}/site-a"/>
+      <mkdir dir="${output.dir}/site-a"/>
+		
+      <mkdir dir="${input.dir}/site-b"/>
+      <mkdir dir="${link.dir}/site-b"/>
+      <mkdir dir="${output.dir}/site-b"/>
+
+      <!-- Create the ntropa configuration file to match the above layout. -->
+      <property name="builder-test.conf" value="${builder-test.dir}/ntropa.properties"/>
+      <propertyfile file="${builder-test.conf}">
+        <entry key="scheduler.period" value="10"/>
+        <entry key="context-path-list" value="master,site-a,site-b"/>
+        <entry key="layout.input" value="${input.dir}"/>
+        <entry key="layout.link" value="${link.dir}"/>
+        <entry key="layout.output" value="${output.dir}"/>      	
+        <entry key="configuration.version" value="1.0"/>      	
+      </propertyfile>
+		
+      <!-- Create environment file used in setenv.sh. -->
+      <property name="builder-test.env-file" value="${builder-test.dir}/environment.sh"/>
+      <propertyfile file="${builder-test.env-file}">
+      	<entry key="JRE_HOME" value="${java.home}"/>
+      	<entry key="CATALINA_PID" value="${builder-test.dir}/ntropa.pid"/>
+      </propertyfile>
+
+      <!-- Start Tomcat. -->
+      <!-- TODO: allow override of JRE_HOME from a user property file. -->
+      <echo>Starting Tomcat</echo>
+      <exec executable="sh">
+      	<!-- Override the default location (which is /etc/ntropa/ntropa.properties) -->
+      	<env key="NTROPA_CONF_FILE" value="${builder-test.conf}"/>
+      	<!-- Override the default location (which is /etc/ntropa/environment.sh) -->
+      	<env key="NTROPA_ENV_FILE" value="${builder-test.env-file}"/>
+      	<arg path="${thnb-test.tc.dir}/bin/startup.sh"/>
+      </exec>
+      <property name="tc.log" value="${thnb-test.tc.dir}/logs/catalina.out"/>
+      <waitfor maxwait="20" maxwaitunit="second" timeoutproperty="timedout">
+      	<and>
+      	  <available file="${tc.log}"/>
+          <!-- The port was incremented by 10 in the replace task above. -->
+      	  <http url="http://localhost:54392/"/>
+        </and>
+      </waitfor>
+      <fail if="timedout" message="Tomcat did not startup"/>
+      <!-- Check only one NtropaBuilder is running.
+           See http://issues.apache.org/bugzilla/show_bug.cgi?id=41853 for the embarassing details. -->
+	  <exec executable="grep" outputproperty="entry-count">
+		<arg line="-c 'Selected configuration file' ${tc.log}"/>
+      </exec>
+      <condition property="entry-count-correct">
+        <equals arg1="1" arg2="${entry-count}"/>
+      </condition>
+	  <!--sleep seconds="40"/-->
+      <fail message="Incorrect count of log entries: ${entry-count} (maybe double-init problem)" unless="entry-count-correct"/>
+
+      <!-- Run functional tests. -->
+      <ant dir="adapter" target="multi-builder-functional-test">       
+        <property name="ntropa.input-dir" value="${builder-test.dir}/input" />
+        <property name="ntropa.output-dir" value="${builder-test.dir}/output" />
+      </ant>
+		
+      <!-- Stop Tomcat. -->
+	  <echo>Stopping Tomcat</echo>
+      <exec executable="sh">
+      	<!-- NTROPA_CONF_FILE is not set here because it is not needed when shutting down,
+      	     and setenv.sh does not warn if it is not set. -->
+      	<!-- Override the default location (which is /etc/ntropa/environment.sh) -->
+      	<env key="NTROPA_ENV_FILE" value="${builder-test.env-file}"/>
+      	<arg path="${thnb-test.tc.dir}/bin/shutdown.sh"/>
+      </exec>
+		
+	</target>
+</project>
