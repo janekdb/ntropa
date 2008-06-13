@@ -1,0 +1,16 @@
+[Jar files]
+/home/yan/work/ntropa/build/lib/ntropa-runtime.jar
+/home/yan/work/ntropa/build/lib/ntropa-build.jar
+/home/yan/work/ntropa/build/lib/ntropa-utility.jar
+[Source dirs]
+/home/yan/work/ntropa/presentation/sao/src
+/home/yan/work/ntropa/presentation/wps/src
+/home/yan/work/ntropa/common/utility/src
+[Aux classpath entries]
+/home/yan/work/ntropa/libraries/commons-collections.jar
+/home/yan/work/ntropa/libraries/commons-lang.jar
+/home/yan/work/ntropa/libraries/servlet.jar
+/home/yan/work/ntropa/libraries/jakarta-oro.jar
+/home/yan/work/ntropa/libraries/Tidy.jar
+/home/yan/work/ntropa/libraries/xercesImpl.jar
+/opt/JBoss-2.4.11/lib/ext/jboss.jar

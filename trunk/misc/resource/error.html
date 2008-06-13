@@ -1,0 +1,52 @@
+<%@ page isErrorPage="true" %>
+<%@ page import="java.io.*" %>
+<%@ page import="java.util.*" %>
+<%@ page import="org.ntropa.runtime.utility.StringUtilities" %>
+<%@ page import="org.ntropa.runtime.app.channel.ServiceLocator" %>
+<%@ page import="org.ntropa.runtime.app.error.ExceptionTool" %>
+<html>
+<head>
+<title>Error</title>
+<!-- $Id: error.html,v 1.5 2004/11/26 12:19:42 jdb Exp $ -->
+</head>
+<body>
+
+<%
+
+
+/*
+ * org.odmg.TransactionNotInProgressException: when a transaction obtained from a closed database is used.
+ * org.odmg.DatabaseClosedException:           when a course profile is displayed. (Don't know why this is different yet)
+ */
+if ( ( exception instanceof org.odmg.TransactionNotInProgressException ) || ( exception instanceof org.odmg.DatabaseClosedException ) ) {
+    out.write ( "This section of the web site is undergoing maintenance. Please try again in a few minutes" ) ;
+    return ;
+}
+
+String reference = "nav-err-ref:" + new Date().getTime();
+
+out.write ( "<p>There was a an internal fault. We apologise for this inconvenience.</p>" ) ;
+out.write ( "<p>The reference code for this error is: <b>" + reference + "</b>" ) ;
+
+ExceptionTool tool = ServiceLocator.getServiceLocator( request ).getExceptionTool ( request );
+
+if ( tool.showDetails() ) {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream () ;
+    PrintStream ps = new PrintStream ( baos ) ;
+    
+    exception.printStackTrace ( ps ) ;
+    
+    String st = baos.toString ( "iso-8859-1" ) ;
+    //st = StringUtilities.replace ( st, "\n", "<br>" ) ;
+    // 23910
+    out.write ( "<pre>\n" + st + "\n</pre>" ) ;
+}
+
+// See: http://servlets.com/soapbox/servlet23.html
+String initialUri = (String) request.getAttribute( "javax.servlet.error.request_uri" );
+
+tool.record( exception, initialUri, reference );
+
+%>
+</body>
+</html>

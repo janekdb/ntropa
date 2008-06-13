@@ -1,0 +1,128 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<HTML>
+  <HEAD>
+    <TITLE>WPS Package Documentation: processing of marked up HTML</TITLE>
+  </HEAD>
+  <BODY>
+
+  (This needs converting to HTML)
+
+These examples shows the motivation for the September 2002 changes to the WPS.
+
+Some aspects of this functionality are similar to XSLT, in particular the way a
+template now adds elements from it's user to itself.
+
+The goal was to support more useful template substitution by allowing the
+page including the template to define elements to be used in the substituted template.
+
+This would allow full-page templates to be used:
+
+EXAMPLE A
+---------
+
+This is an example of a full page template, defined and used.
+
+/_include/templates.html
+
+    <!-- template="full-page" -->
+    <html>
+    <head>
+    <title><!-- use-element="title" -->Placeholder Page Title<!-- use-element="/title" --></title>
+    </head>
+    <body>
+    <table>
+    <tr><td>Navigation HTML...</td>
+    <td><!-- use-element="content" -->Placeholder Content<!-- use-element="/content" --></td>
+    <td>Banner Ads HTML...</td></tr>
+    </table>
+    </body>
+    </html>
+    <!-- template="/full-page" -->
+
+
+/index.html
+
+    <!-- use-template="full-page" -->
+    <html>
+    <head>
+    <title>Ignored Title</title>
+    </head>
+    <body>
+    <!-- element="title" -->My Page Title<!-- element="/title" -->
+    <!-- element="content" -->My Content<!-- element="/content" -->
+    </body>
+    </html>
+    <!-- use-template="/full-page" -->
+
+Note that the element "title" was not defined in the <title> tag although it could have
+been.
+
+Example A shows the need for Element to allow objects of class Placeholder to be added. This
+is because the parse method of MarkedUpHtmlParser uses an Element as the top level list when
+parsing a new Fragment.
+
+
+EXAMPLE B
+---------
+
+This is an example of default provision for Elements required by a template.
+
+/_include/template-full.html
+
+    <!-- template="full-page" -->
+    <html>
+    <head>
+    <title>Section Title</title>
+    </head>
+    <body>
+    <table>
+    <tr><td>Navigation HTML...</td>
+    <td><!-- use-element="A" -->Placeholder Content<!-- use-element="/A" --></td>
+    <td><!-- use-element="B" -->Placeholder Content<!-- use-element="/B" --></td>
+    <td><!-- use-element="C" -->Placeholder Content<!-- use-element="/C" --></td>
+    <td>Banner Ads HTML...</td></tr>
+    </table>
+    </body>
+    </html>
+    <!-- template="/full-page" -->
+
+/_include/intermediate.html
+
+    <html>
+    <head>
+    <title>Intermediate Template</title>
+    </head>
+    <body>
+    <!-- template="intermediate" -->
+        <!-- use-template="full-page" -->
+
+        <!-- element="A" -->Default real content (A)<!-- element="/A" -->
+
+        <!-- use-element="B" -->Placeholder Content<!-- use-element="/B" -->
+        <!-- use-element="C" -->Placeholder Content<!-- use-element="/C" -->
+
+        <!-- use-template="/full-page" -->
+    <!-- template="/intermediate" -->
+    </body>
+    </html>
+
+/index.html
+
+    <!-- use-template="intermediate" -->
+    <html>
+    <head>
+    <title>Ignored Title</title>
+    </head>
+    <body>
+    <!-- element="B" -->Real content (B)<!-- element="/B" -->
+    <!-- element="C" -->Real content (C)<!-- element="/C" -->
+    </body>
+    </html>
+    <!-- use-template="/intermediate" -->
+
+Example B shows the need for ServerActiveHtml to allow objects of class Placeholder to be added
+to the -implicit Element.
+
+  </BODY>
+</HTML>

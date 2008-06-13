@@ -1,0 +1,42 @@
+/*
+ * Created on 22-Dec-2004
+ *
+ * SelectByDeploymentModeModeSAO
+ */
+package com.studylink.sao.common;
+
+import com.studylink.app.channel.ServiceLocator;
+import com.studylink.sao.BaseServerActiveObject;
+import com.studylink.sao.InvocationContext;
+
+/**
+ * Render one of these elements according to the deployment mode
+ * <ol>
+ * <li>development
+ * <li>testing
+ * <li>production 
+ * </ol>
+ * 
+ * If an element matching the mode does not exist render the element 'default' if
+ * it exists.
+ * 
+ * @author Vishal
+ *
+ * 
+ */
+public class SelectByDeploymentModeSAO extends BaseServerActiveObject {
+
+	private static final String DEFAULT_ELEMENT_NAME = "default";
+
+	public void render(InvocationContext icb) throws Exception {
+
+		String deploymentMode = ServiceLocator.getServiceLocator
+			(icb.getHttpServletRequest()).getDeploymentMode();
+
+		if (childExists(deploymentMode))
+			getChild(deploymentMode).render(icb);
+		else if (childExists(DEFAULT_ELEMENT_NAME))
+			getChild(DEFAULT_ELEMENT_NAME).render(icb);
+	}
+
+}

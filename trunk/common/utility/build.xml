@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Author: JDB, 01-9-4. Based on application/build.xml -->
+<!-- $Id: build.xml,v 1.43 2006/03/08 15:17:32 jdb Exp $ -->
+
+<project basedir="." default="main" name="utility">
+
+
+    <!--  01-10-31 jdb. -->
+    <!--  Reduce the number of places the class path is built. -->            
+    <path id="compile.class.path">                 
+        <pathelement location="${libraries.junit}"/>                 
+        <pathelement location="${libraries.servlet}"/>   
+        <pathelement location="${libraries.commons-collections}"/>
+        <pathelement location="${libraries.commons-lang}"/>
+        <!--pathelement location="${libraries.commons-logging}"/-->
+        <!--pathelement location="${libraries.commons-logging-api}"/-->
+    </path>
+
+    <!-- The tests are not jarred so we extend the classpath for junit --> 
+    <path id="test.class.path">                 
+        <path refid="compile.class.path" />                 
+        <pathelement path="${destdir}" />
+        <!-- pathelement location="${libraries.junit}" /-->
+    </path>
+
+    <!-- TODO: Stop duplicating this path definition. It is defined in /build.xml as well. -->
+    <path id="cobertura.classpath">
+        <fileset dir="${cobertura.dir}">
+            <include name="cobertura.jar"/>
+            <include name="lib/**/*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="main" depends="init,clean,build" description="Build everything.">
+       <!--echo message="Running tests..."/-->
+       <antcall target="runtests"/>
+       <antcall target="jar" />
+       
+    </target>
+
+    <target name="runtests" depends="init" unless="without.tests">
+
+        <!-- fork="yes" added for Cobertura. -->
+        <junit fork="yes" haltonerror="true" haltonfailure="true" printsummary="no">
+
+           <!--
+               Specify the name of the coverage data file to use.
+               The value specified below is the default.
+           -->
+           <sysproperty key="net.sourceforge.cobertura.datafile" file="${cobertura-datafile}" />
+
+           <!--
+               The instrumented classes reference classes used by the
+               Cobertura runtime, so Cobertura and its dependencies
+               must be on your classpath.
+           -->
+           <classpath refid="cobertura.classpath" />
+
+           <classpath refid="test.class.path" />
+
+           <sysproperty   key = "work.dir"
+                        value = "${ntropa.build.work}"/>
+
+           <!-- we only define one directory for all subpackage tests to use. -->
+           <sysproperty   key = "utility.package.dir"
+                        value = "${destdir}/tests/org/ntropa/utility"/>
+
+            <!--
+                This makes all the junit output be sent to stdout
+                usefile="false"
+            -->
+            <formatter type="plain" usefile="false"/>
+
+            <test name="tests.org.ntropa.utility.DateUtilsTest"/>
+            <test name="tests.org.ntropa.utility.HtmlUtilsTest"/>
+            <test name="tests.org.ntropa.utility.CollectionsUtilitiesTest"/>
+
+            <test name="tests.org.ntropa.utility.StringUtilitiesTest"/>
+            <test name="tests.org.ntropa.utility.PathWalkerTest"/>
+            <test name="tests.org.ntropa.utility.StandardFilePredicateTest"/>
+            <test name="tests.org.ntropa.utility.FileUtilitiesTest"/>
+
+        </junit>
+        
+    </target>
+
+    <target name="init">
+        <!-- You can set up any variables you want used throughout the script here. -->
+
+        <property name="jarname" value="${libraries.ntropa-utility}"/>
+
+        <property name="srcdir" value="./src"/>
+
+        <!-- ntropa.build is based on basedir and is an absolute path. ${destdir} is used to hand a path to a unit test. -->
+        <property name="destdir" value="${ntropa.build}/classes"/>
+
+        <mkdir dir="${destdir}"/>
+
+    </target>
+    
+    <target name="build" depends="init">
+ 
+      <antcall target="compile" />
+      <antcall target="instrument" />
+
+    </target>
+
+    <target name="instrument" if="with.coverage">
+
+        <echo message="Instrumenting classes"/>
+        <!-- todir is not specified so the classes are instrumented in place. -->
+        <cobertura-instrument datafile="${cobertura-datafile}">
+            <fileset dir="${destdir}">
+                <include name="org/ntropa/utility/**/*.class"/>
+            </fileset>
+        </cobertura-instrument>
+
+    </target>
+
+    <target name="compile">
+
+        <!-- Both srcdir and destdir should be package roots. -->
+        <!-- They could be different of course; in that case NetBeans can also be set -->
+        <!-- up to compile to a different filesystem in the same way; see Compiler Types: -->
+
+
+         <!-- See "Why 1.4 Target" in the top level build file. -->
+         <javac
+                destdir="${destdir}"
+                srcdir="${srcdir}"
+                classpathref="compile.class.path"
+		debug="${compile.debug}"
+                encoding="utf-8"
+                source="1.4"
+                target="1.4"
+	 >
+
+
+            <!-- To exclude some files: -->
+            <!--
+                <exclude name="com/foo/SomeFile.java"/>
+                <exclude name="com/foo/somepackage/"/>
+            -->
+        </javac>
+
+        <!-- copy over zip files for creating test fixtures -->
+        <!-- The first class to use a zip file was FolderLinkTest.java -->
+        <copy todir="${destdir}/tests">
+            <fileset dir="${srcdir}/tests">
+                <include name="**/*.zip"/>
+                <include name="**/*.txt"/>
+            </fileset>
+        </copy>
+
+    </target>
+
+    <target name="clean" depends="init" description="Clean all build products.">
+        <delete>
+            <!-- leave other tiers alone -->
+            <fileset dir="${destdir}">
+                <include name="**/org/ntropa/utility/*.class"/>
+                <include name="**/org/ntropa/utility/*.zip"/>
+                <include name="**/org/ntropa/utility/*.txt"/>
+            </fileset>
+            <!-- NetBeans will compile the classes to the same directory until the default is changed -->
+            <fileset dir="${srcdir}">
+                <include name="**/*.class"/>
+            </fileset>
+        </delete>
+        <!-- Deleting the jar prevents an exception (ZLIB) in the compile task. Apparently this is a bug in the JRE --> 
+        <delete file="${jarname}" />
+    </target>
+
+    <!-- To make a standalone app: -->
+    <!-- 1. Create a myapp.mf manifest somewhere. -->
+    <!-- 2. Put in it: -->
+    <!--    Manifest-Version: 1.0 -->
+    <!--    Main-Class: com.foo.Main -->
+    <!-- 3. Pass to <jar>: manifest="myapp.mf" -->
+    <target name="jar" depends="init,build">
+                <!-- jar classes from com tree, omit tests -->
+                <jar
+                    jarfile="${jarname}"
+                    compress="true"
+                    basedir="${destdir}"
+                    includes="org/ntropa/utility/**"
+                >
+                    <!--
+                    <exclude name="**/*.java"/>
+                    <exclude name="**/*.form"/>
+                    <exclude name="myapp.mf"/>
+                    <exclude name="myapp.jar"/>
+                    <exclude name="apidoc"/>
+                    -->
+                </jar>
+    </target>
+    
+
+</project>

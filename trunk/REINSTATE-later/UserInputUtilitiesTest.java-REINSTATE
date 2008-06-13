@@ -1,0 +1,154 @@
+/*
+ * Copyright 2001-2006 LEARNING INFORMATION SYSTEMS PTY LIMITED
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * UserInputUtilitiesTest.java
+ *
+ * Created on 10 December 2001, 12:40
+ */
+
+package tests.com.studylink.utility;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.TreeSet;
+import java.util.Set;
+
+import com.studylink.utility.UserInputUtilities;
+import junit.framework.*;
+
+/**
+ * 
+ * @author jdb
+ * @version $Id: UserInputUtilitiesTest.java,v 1.6 2005/11/24 17:46:37 jdb Exp $
+ */
+public class UserInputUtilitiesTest extends TestCase {
+
+	/** Creates new UserInputUtilitiesTest */
+	public UserInputUtilitiesTest(String testName) {
+		super(testName);
+	}
+
+	public static void main(java.lang.String[] args) {
+		junit.textui.TestRunner.run(suite());
+	}
+
+	/* Comments copied from junit.framework.TestSuite. */
+
+	/**
+	 * A <code>TestSuite</code> is a <code>Composite</code> of Tests. It
+	 * runs a collection of test cases.
+	 * 
+	 * This constructor creates a suite with all the methods starting with
+	 * "test" that take no arguments.
+	 */
+	public static Test suite() {
+
+		TestSuite suite = new TestSuite(UserInputUtilitiesTest.class);
+		return suite;
+	}
+
+	public void testwellFormedEmailTest() {
+
+		if (!UserInputUtilities.wellFormedEmail("johndoe@hotmail.com"))
+			fail("valid email rejected");
+
+		if (UserInputUtilities.wellFormedEmail(null))
+			fail("null value rejected");
+
+		if (UserInputUtilities.wellFormedEmail("1@23"))
+			fail("email too short rejected");
+
+		if (UserInputUtilities.wellFormedEmail(""))
+			fail("email empty string rejected");
+
+		if (UserInputUtilities.wellFormedEmail("johndoehotmail.com"))
+			fail("email without '@' rejected");
+
+		if (UserInputUtilities.wellFormedEmail("novice@hotmail"))
+			fail("novice@hotmail rejected");
+
+		if (UserInputUtilities.wellFormedEmail("local"))
+			fail("local rejected");
+
+		if (UserInputUtilities.wellFormedEmail("novice@hotmail@com"))
+			fail("email with two '@' rejected");
+
+		if (UserInputUtilities.wellFormedEmail("user1@studylink.com,user2@studylink.com"))
+			fail("email with ',' rejected");
+
+		if (UserInputUtilities.wellFormedEmail("user1 @studylink.com"))
+			fail("email with space rejected");
+
+		if (!UserInputUtilities.wellFormedEmail("janekdb+sl-051124-1@gmail.com"))
+			fail("valid email rejected");
+
+	}
+
+	public void testCollectValidCodes() {
+
+		List submitted = new LinkedList();
+		List valid = new LinkedList();
+		Set collected = new TreeSet();
+
+		UserInputUtilities.collectValidCodes(submitted, valid, collected);
+		assertEquals("Something was incorrectly collected (1)", 0, collected.size());
+
+		submitted = new LinkedList();
+		submitted.add("AAA");
+		valid = new LinkedList();
+		collected = new TreeSet();
+
+		UserInputUtilities.collectValidCodes(submitted, valid, collected);
+		assertEquals("Something was incorrectly collected (2)", 0, collected.size());
+
+		submitted = new LinkedList();
+		submitted.add("AAA");
+		valid = new LinkedList();
+		valid.add("BBB");
+		collected = new TreeSet();
+
+		UserInputUtilities.collectValidCodes(submitted, valid, collected);
+		assertEquals("Something was incorrectly collected (3)", 0, collected.size());
+
+		submitted = new LinkedList();
+		submitted.add("AAA");
+		valid = new LinkedList();
+		valid.add("AAA");
+		valid.add("BBB");
+		collected = new TreeSet();
+
+		Set expected = new TreeSet();
+		expected.add("AAA");
+
+		UserInputUtilities.collectValidCodes(submitted, valid, collected);
+		assertEquals("Something was incorrectly collected (4)", expected, collected);
+	}
+
+	public void testWellFormedDate() {
+
+		String[] acceptableStrings = { "31/12/02", "01/01/01", "03/08/68" };
+		for (int i = 0; i < acceptableStrings.length; i++)
+			assertTrue("Well formed date was well formed: " + acceptableStrings[i], UserInputUtilities
+					.wellFormedDate(acceptableStrings[i]));
+
+		String[] unacceptableStrings = { "31/12/2002", "01/01", "03/8/68", "1/10/72", "9-9-45", "9-9-" };
+		for (int i = 0; i < unacceptableStrings.length; i++)
+			assertTrue("Ill formed date was rejected: " + unacceptableStrings[i], !UserInputUtilities
+					.wellFormedDate(unacceptableStrings[i]));
+
+	}
+}

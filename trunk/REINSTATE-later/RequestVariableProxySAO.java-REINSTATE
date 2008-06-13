@@ -1,0 +1,50 @@
+package com.studylink.sao.common;
+
+import com.studylink.app.channel.ServiceLocator;
+import com.studylink.utility.HtmlUtils;
+
+/**
+ * This server active object acts as a proxy to the <code>ServiceLocator</code>
+ * object by requesting placeholder replacement values for placeholder codes.
+ * <p>
+ * This is useful in a variety of situations, typically when there is a
+ * requirement to display a value which is related to the request object.
+ * Examples of this category of information are
+ * <ul>
+ * <li>The directory-did for a virtual directory page
+ * <li>The directory-name for a virtual directory page
+ * </ul>
+ * To use this object configure it as the '-base' server active object (this is
+ * the SAO which is the root of the tree of SAOs) by putting this property into
+ * the application.properties file in the _application directory at the root of
+ * the channel
+ * <p>
+ * 
+ * <pre>
+ *  sao.-base.class-name = com.studylink.sao.common.RequestVariableProxySAO
+ * </pre>
+ * 
+ * <p>
+ * When a channel is configured in this way every unhandled placeholder
+ * replacement request will eventually arrive at an object of this class. The
+ * object will then delegate the request to the service locator. If the service
+ * locator does not supply a replacement the superclass is asked to do so.
+ * 
+ * @author jdb
+ * @version $Id: ChannelVariableProxySAO.java,v 1.4.4.1 2005/08/07 16:56:54 jdb
+ *          Exp $
+ */
+public class RequestVariableProxySAO extends ChannelVariableProxySAO {
+
+	public String getPlaceholderReplacement(String name) {
+
+		ServiceLocator serviceLocator = ServiceLocator.getServiceLocator(getInvocationContext().getHttpServletRequest());
+
+		String rep = serviceLocator.getRequestVariable(getInvocationContext().getHttpServletRequest(), name);
+		if (rep != null)
+			return HtmlUtils.convertToHtml(rep);
+
+		return super.getPlaceholderReplacement(name);
+	}
+
+}

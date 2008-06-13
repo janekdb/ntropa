@@ -1,0 +1,115 @@
+/*
+ * PageCountSAO.java
+ *
+ * Created on 12 July 2002, 16:13
+ */
+
+package com.studylink.sao.common;
+
+import java.util.List;
+
+import com.studylink.app.channel.ServiceLocator;
+import com.studylink.app.channel.Session;
+import com.studylink.sao.AbstractElement;
+import com.studylink.sao.BaseServerActiveObject;
+import com.studylink.sao.InvocationContext;
+import com.studylink.sao.util.ResultsListUtils;
+
+/**
+ * This class help render a summary of the number of items in a list and the number
+ * of pages the list spans.
+ * <p>
+ * The course id list is obtained from <code>ServletRequestSAOData</code> so
+ * this must have been set in a controlSelf method somewhere on the same page.
+ *
+ *
+ * @author  jdb
+ * @version $Id: PageCountSAO.java,v 1.5 2005/08/10 16:01:01 jdb Exp $
+ */
+public class PageCountSAO extends BaseServerActiveObject {
+
+	/**
+	 * This is the name of the Element to use when there is one course.
+	 */
+	private final String ELEMENT_ONE_COURSE = "one-course";
+
+	/**
+	 * This is the name of the Element to use when there is more than one course
+	 * but only one page of courses.
+	 */
+	private final String ELEMENT_ONE_PAGE = "one-page";
+
+	/**
+	 * This is the name of the Element to use when there is more than one
+	 * page of courses.
+	 */
+	private final String ELEMENT_MANY_PAGES = "many-pages";
+
+	/**
+	 * Key for count.
+	 */
+	//private static final String TL_COUNT_KEY = "count" ;
+
+	/**
+	 * Key for pages.
+	 */
+	//private static final String TL_PAGES_KEY = "pages" ;
+
+	public void render(InvocationContext icb) throws Exception {
+
+		/*
+		 * Store a reference to the InvocationContext so the application
+		 * log can be accessed in AbstractServerActiveObject.
+		 *
+		 * This also needs to be done if access to the InvocationContext is
+		 * required in getPlaceholderReplacement, which could be invoked by
+		 * a rendered child element.
+		 *
+		 * This is also neccessary to allow access to the ServletContext in
+		 * AbstractServerActiveObject for logging.
+		 */
+		setInvocationContext(icb);
+
+		ServiceLocator serviceLocator = ServiceLocator.getServiceLocator(icb.getHttpServletRequest());
+
+		/* get cached list */
+		List courseIdList = ServletRequestSAOData.newInstance(icb.getHttpServletRequest()).getCourseIdList();
+
+		Session session = serviceLocator.getSession(icb.getHttpServletRequest());
+		int coursesPerPage =
+			session.getCoursesPerPageNumber() == null
+				? serviceLocator.getCoursesPerPage()
+				: session.getCoursesPerPageNumber().intValue();
+
+		/*
+		 * Get valid references to the Element we use to render the result list.
+		 *
+		 * getChild () will throw throw the runtime exception NoSuchAbstractElementException
+		 * if the child is missing so there is no need to check the returned value.
+		 */
+		AbstractElement oneCourseElement = getChild(ELEMENT_ONE_COURSE);
+		AbstractElement onePageElement = getChild(ELEMENT_ONE_PAGE);
+		AbstractElement manyPagesElement = getChild(ELEMENT_MANY_PAGES);
+
+		int courseCount = courseIdList.size();
+		/*
+		 * Prepare the placeholder replacements for all potential placeholders
+		 */
+		getPlaceholderReplacementStack().push("count", "" + courseCount);
+		/*
+		 *  0 - 10 -> 1
+		 * 11 - 20 -> 2
+		 */
+		getPlaceholderReplacementStack().push("pages", "" + ResultsListUtils.getPageCount(courseCount, coursesPerPage));
+
+		if (courseCount == 0)
+			icb.getJspWriter().write("PageCountSAO is not designed to handle 0 courses");
+		else if (courseCount == 1)
+			oneCourseElement.render(icb);
+		else if (courseCount <= coursesPerPage)
+			onePageElement.render(icb);
+		else if (courseCount > coursesPerPage)
+			manyPagesElement.render(icb);
+
+	}
+}

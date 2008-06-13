@@ -1,0 +1,62 @@
+/*
+ * ChannelVariableProxySAO.java
+ *
+ * Created on 03 October 2002, 21:49
+ */
+
+package com.studylink.sao.common;
+
+import com.studylink.app.channel.ServiceLocator ;
+
+import com.studylink.sao.BaseServerActiveObject;
+import com.studylink.sao.InvocationContext;
+
+import com.studylink.utility.HtmlUtils ;
+
+/**
+ * This server active object acts as a proxy to the <code>ServiceLocator</code> object
+ * by requesting placeholder replacement values for placeholder codes.
+ * <p>
+ * This is useful in a variety of situations, typically when there is a requirement
+ * to display a value which is maintained by the channel object. Examples of this
+ * category of information are
+ * <ul>
+ * <li>The current date for the time zone of the channel
+ * <li>The number of learning opportunties the channel has access to
+ * <li>The date of the last update to the channel
+ * </ul>
+ * To use this object configure it as the '-base' server active object (this is the SAO
+ * which is the root of the tree of SAOs) by putting this property into the application.properties
+ * file in the _application directory at the root of the channel
+ * <p>
+ * <pre>
+ * sao.-base.class-name = com.studylink.sao.common.ChannelVariableProxySAO
+ * </pre>
+ * <p>
+ * When a channel is configured in this way every unhandled placeholder replacement request will eventually
+ * arrive at an object of this class. The object will then delegate the request to the channel.
+ *
+ * @author  jdb
+ * @version $Id: ChannelVariableProxySAO.java,v 1.6 2005/08/10 16:01:01 jdb Exp $
+ */
+public class ChannelVariableProxySAO extends BaseServerActiveObject {
+    
+    
+    public void controlSelf ( InvocationContext icb ) throws Exception {
+        
+        setInvocationContext ( icb ) ;
+    }
+    
+    public String getPlaceholderReplacement (String name) {
+        
+        ServiceLocator serviceLocator = ServiceLocator.getServiceLocator ( getInvocationContext ().getHttpServletRequest () ) ;
+        
+        String rep = serviceLocator.getChannelVariable ( name ) ;
+        if ( rep != null )
+            return HtmlUtils.convertToHtml ( rep ) ;
+        
+        return null ;
+    }
+    
+}
+

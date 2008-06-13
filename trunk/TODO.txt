@@ -1,0 +1,587 @@
+NTROPA
+
+TODO:
+
+Add release code to ntropa-runtime.jar
+Use to replace com.studylink.sao.* runtime files
+
+Cache *.properties for the duration of one update to allow wdfs mounting to perform reasonably.
+  At present each SAO reads all *.properties in the paths until a match is found.
+
+Create deb
+
+  Use SuSE build service for different architecture
+
+DONE: Deployment to NAVDEV:
+  COULD NOT, because Debian useradd does not support -r: Make ntropa a system user in install.sh
+  DONE: init script
+  DONE: ntropa.properties
+  DONE: migrate from jboss to ntropa daemon
+
+Add missing template logging
+  At build time
+  At runtime
+
+Make this message include the full path: [Mapper.notifyListeners] Exception while notifying listeners with event '2' for FileLocation 'test.html': java.lang.IllegalArgumentException: Old HTML document did not contain a head closing tag: </head>
+
+An example of using a different encoding to the UTF-8 default: context-path.intl.encoding = ISO-8859-1
+
+Remove DISABLE_UNTIL_POST_NAVDEV_NTROPA_INSTALL in MapperTest after Ntropa is in use on NAVDEV.
+
+Make DirectoryMonitor.monitorFolder() return an implementation of FileChangeSet that is read only. This means FileChangeSet change from a class to an interface.
+
+Add a max-depth option to ntropa.properties to stop monitoring of very deep directories
+caused by adding a directory into itself:
+  NA/Confirm these deep directories eat CPU.
+
+install.sh
+  Warn or fail when java not detected.
+  For SuSE use sysconfig/j2ee
+  For Debian use what?
+
+Add overridable heap size on start/stop to setenv.sh
+  Overridable from environment.sh
+  
+DONE: Pass "start" or "stop" to setenv.sh so that Your JavaProfiler or JMX
+  NOTE: Monitoring can be started only on "start".
+  DONE: Pick up JAVA_OPTS for start or stop from environment.sh
+    DONE: Fix bug with: setenv.sh: 28: [[: not found. dash does not support [[ ... ]].
+  DONE: Use ant patch task with diff output from catalina.sh and catalina.sh-edited
+
+Consider adding support for Konqueror special urls like: strigi:/status
+
+This message is probably caused by the target of a link missing. Improve the
+message to state that: 
+  [org.ntropa.build.jsp.JSPBuilder] Source was not a file: /opt/xl/web/link/guardian-uk/login/login.html
+
+JSPBuilderTest.testTemplateArtifactsAreDeletedWhenTemplateDeleted did not produce any template artifact when single
+quotes were used (<!-- template='a' -->). Is this a bug?
+
+Enable and make _testJspDirectoryDeletedWhenTargetOfLinkIsDeletedThenAddedWhenTargetOfLinkIsAdded pass.
+
+Avoid having this absolute path in .classpath
+  <classpathentry kind="lib" path="/opt/jboss/lib/ext/jboss.jar"/>
+
+www.ohloh.net: project statistics
+
+Write test case using page-context-title/*html*. Should templates be definable in the head section?
+
+Possible design flaw
+  Set up bms-select.html, and bms-select.html.link
+  Delete bms-select.html.
+  FAULT: The JSP that results from the link file is not deleted.
+  This is a flaw because it violated the ordering principle obeyed in other places: It should not matter what order files are added, modified or deleted in.
+  If the link was the only file added (i.e. the html file was never present) then no jsp would be generated so when the html file is deleted the jsp file should be deleted as well.
+  TODO
+    Test cases: file and directory links.
+    Fix
+    Deploy
+    
+
+Possible bug
+  Add
+
+<!-- template = "meta-tags" -->
+a
+<!-- template = "/meta-tags" -->
+  into the header to produce an Exception.
+<!-- template = "meta-tags" -->
+<!-- template = "/meta-tags" -->
+  worked through.
+      
+Make common/utility UTF-8.
+  HtmlUtils.
+
+DONE: Use URI for link parsing instead of URL. Read JavaDoc for why.
+
+Possible bug
+  Running ant with.tests all caused an indirect cycle exception. Maybe this is a similar bug to the ScriptWriter watchdog.
+  Try running the test with less heap.
+
+Documentation
+  The theme is "Themed online stores with search and checkout"
+  Store the example HTML in branches so the use can sync with the documentation with "svn switch store-7.1".
+
+Run NtropaBuilder as a daemon with init script.
+  DONE: Write script to install the builder in /var/lib/ntropa
+  DONE: These directories need to be writable by ntropa
+  DONE: conf/ because tomcat-users.xml is written out on shutdown
+  DONE: logs/
+  DONE: work/ because the compiled JSPs are stored here.
+  DONE: temp/
+  DONE: webapps/ because builder.jar is exploded to ROOT/
+  DONE: Do setup for catalina.sh
+    DONE: Read environment from environment.sh
+    DONE: Allows an alternative location of environment.sh to be defined as an environment variable and use this in setenv.sh
+  Change demo scheduler period to 30 after testing.
+  ->Add a skeleton init file or adapt exising one.
+    Read: http://www.debian.org/doc/debian-policy/ch-opersys.html#s-sysvinit
+    WONT: Move /etc/ntropa/environment.sh to /etc/default/ntropa
+    From skeleton: Depend on lsb-base (>= 3.0-6) to ensure that /lib/lsb/init-functions is present
+    DONE: Copy skeleton to /etc/init.d/ntropa
+    DONE: Get a tomcat init script from the tomcat deb
+    DONE: Replace init script with tomcat5.5.init based script
+    DONE: Make sure started as user 'ntropa'
+    DONE: Place into svn
+    Add to installer script: update-rc.d?
+    Confirm list for Required-Start, Required-Stop
+    DONE: Modify Author details
+    Stop echoing CATALINA_BASE 	etc to stdout
+
+DONE: Remove debugging out in NtropaBuilder.
+
+Make this unit test work in the time zone of NAVDEV (GMT+11)
+    [junit] Testcase: testSyntacticallyIncorrectInitializationDataRejected took 0.099 sec
+    [junit]     FAILED
+    [junit] The external data matched the input data expected:<last-change=2004-11-27T13:03:59+00:00
+    [junit] last-addition=2002-11-27T13:03:59+00:00
+    [junit] last-modification=2003-11-27T13:03:59+00:00
+    [junit] last-deletion=2004-11-27T13:03:59+00:00
+    [junit] > but was:<last-change=2004-11-28T00:03:59+11:00
+    [junit] last-addition=2002-11-28T00:03:59+11:00
+    [junit] last-modification=2003-11-28T00:03:59+11:00
+    [junit] last-deletion=2004-11-28T00:03:59+11:00
+    [junit] >
+Copy from DateUtilsTest
+
+Consider adding a catalina.policy. Reread debian tc init file if this is done.
+
+135341  Investigate Tomcat 5.5.12 as a hosting solution
+   DONE: Add tc 5.5.20 tar.gz to svn
+   DONE: Write ant target to untar the tc download and do edits on it.
+   DONE: Write a servlet adapter like jboss.NtropaBuilder: org.ntropa.adapter.servlet.NtropaBuilder.
+   DONE: Write functional test of above
+   DONE: Omit or delete bin/*.bat
+   DONE: Change ports used by functional test so that test can be run on same os instance as a production ntropa
+   Extend functional test
+   DONE: Fix this error when the functional test run
+     INFO: catalina.sh: 323: cannot create /var/lib/ntropa/home/ntropa.pid: Permission denied
+
+
+DONE: servlet api, jsp api
+  DONE: update to servlet-api.jar, jsp-api.jar ala navigator
+
+allow-template
+  Works like use-template but if no template is present then instead of a missing template warning, the content of the
+  Markup is used as the template contents: <!-- allow-template="apply-button" --><input type="submit" /><!-- allow-template="/apply-button" -->
+    Share with Matt, Liz and Dru
+    How about "allow-element" in layout templates to match this? It would be consistent and useful.
+
+placeholder urlencoded, asis replacements
+  Push text onto stack, create and cache html version on demand, same for url-encoded and plain.
+  pushHtml, default is html, -asis, -urlencoded accepted
+  pushAsis, default is asis, -html, -urlencoded accepted
+  pushUrlEncoded, default is urlencoded, -asis, -urlencoded accepted
+  Too complicated? maybe also accept -html, -asis, and -urlencoded for all three methods
+
+placeholder html conversion
+  Review the HtmlUtils.convertToHtml. Update to the latest from commons lang.
+
+release 0.6 subtasks
+  135352  A static page that is too large results in a compiler error
+  DONE: 135349  Improve exception message when webdav dir not readable
+  ->135341  Investigate Tomcat 5.5.12 as a hosting solution
+    DONE: Change tomcat ports to allow functional test to run one same machine as a production instance of the hosted builder.
+  135340  Switch to org.ntropa.runtime.sao with backward compatibility
+  DONE: 129207  Use subdirectory for unit tests instead of /tmp directory
+  WONT: 129700  Investigate JuMiX for hosting the builder process
+  DONE: Remove FolderLink plus tests and exception
+
+Allow link files to use both wps:// and ntropa:// url prefixes.
+  There is something is Java 5 or 6 that allows new schemes in an easy way. Find out what it is and use it later when
+  support for Java 1.4 is dropped.
+
+DONE: Add version = 1.0.0 to ntropa.properties
+
+Imported from main TODO.txt
+  DONE: Build ntropa
+  DONE: Put jboss on build path
+  DONE: Merge UTF-8 changes from wps to ntropa.
+  Investigate _tomcat4BugWorkaround in Template.java
+  stk.push("cid", c.getID.value()).asEncoded();
+  stk.push("cid", c.getID.value()).asIs();
+  stk.push("cid", c.getID.value()).asIs();
+  stk.push("cid", c.getID.value()).addEncoded().addAsIs();
+  DONE: Add deploy-to-jboss target
+  Add test to DOMEditorTest to test the non-exception throwing behaviour of replacePlaceholders when the full page template is missing. Currently
+    this is tested by JSPBuilderTest
+
+Test with all HTML files on local system
+Test with a larger set of HTML files obtained by a spider.
+
+Make this error message more useful
+  MarkUpAttributes object had an identity crisis; it contained none of 'name', 'element', 'use-template', 'use-element' attributes: attributes: {template=header}
+
+XHTML not handled
+   Add test cases for these documents
+     failing-xhtml-docs/
+       fails.html
+       succeeds.html
+
+Error messages
+  Improve the error message this HTML produces
+    <!-- template = "latest-provider-discussion" -->
+    <!-- name = "latest-provider-discussion" -->
+    <!-- element = "header" -->
+    <p>Latest Discussion</p>
+    <!-- element = "/header" -->
+    <!-- element = "entry" -->
+    <a title="$$link-title$$" href="$$link$$">$$title$$</a><br />
+    <!-- element = "/entry" -->
+    <!-- element = "footer" -->
+    <!-- use-element = "provider-discussion-footer" -->
+    Let the page that uses this template define the footer
+    <!-- use-element = "/provider-discussion-footer" -->
+    <!-- element = "/footer" -->
+    <!-- name = "/latest-provider-discussion" -->
+    <!-- template = "/latest-provider-discussion" -->
+    
+  At present it is a ClassCastException
+  (Consider in fact allowing this syntax.)
+  
+
+
+DONE: Parallel test on SLINK
+  DONE: Add jboss 2.4.x deployment target and use on SLINK.
+  DONE: Mapper.processEvent, failed to make symbolic link: .., java.io.IOException: Too many open files.
+
+=======
+Cobertura
+  Exclude tests.* from coverage report.
+  Remove cobutura.classpath definition duplication
+  Make all coverage tests and reports use /build/cobertura.ser
+  Add coverage-check
+  Update ntropa to the same version of Jakarta ORO as Cobertura.
+  Add cobertura coverage to adapter package.
+  DONE: Add cobertura coverage to sao package.
+  DONE: Add cobertura coverage to wps package.
+When Matt made a bad link wps://master/search/v1/_application/search-a-reas.properties an incorrect link was not made. Why is this? Bug?
+
+  DONE: Add dedicated directory for report output.
+  DONE: Add clean target
+  Check all cobertura-instrument tasks exclude unit test classes
+  Continue isolating cause of apparent hang when running the instrumented org.ntropa.runtime class tests
+  ->Make with.coverage effective
+    adapter/build.xml
+    DONE: common/utility/build.xml
+    DONE: presentation/sao/build.xml
+    DONE: presentation/wps/build.xml
+  
+DONE: Last Changed for site
+  DONE: Add a file that contains the time a site was last changed by addition, deletion or modification
+     DONE: File to be named 'build-status.properties'.
+     DONE: Confirm StandardInputFilter ignored this file in webdav.
+  Coverage of StandardChannelMonitor
+    Before: 84%: 53/63.
+    After:  84%: 75/89
+  Fix test case on NAVDEV (different TimeZone)
+  Reinstate DateUtilsTest#testReminder
+  Reinstate in StandardChannelMonitorTest
+    public void _testBuildStatusFileIsUpdatedOnChanges() {
+    public void _testBuildStatusFileIsNotUpdatedWhenTheInputChangesButDoesNotChangeAnyJSP() {
+    public void _testBuildStatusFileIsUpdatedOnMirroredFileChanges() {
+    public void _testAdditionOfUnusedTemplateDoesNotResultInAChangeBeingRecorded() {
+    
+     
+Web site
+  Add ant task to convert Java source to HTML
+    Note: kate can convert Java source to HTMl but without hyperlinks
+  Add ant task to upload HTML Java source to SourceForge web site.
+
+kate
+  file bug report. XML outlining does not work with two consecutive comments 
+    This is the example from presentation/sao/build.xml r70 after adding the fork="yes" comment
+    Check kate stderr/stdout when viewing this file for this error
+	QGArray::at: Absolute index 16 out of range
+ 
+    <target name="runtests" depends="init" unless="without.tests">
+	<!-- fork="yes" added for Cobertura. -->
+        <!-- when ant 1.5.1 use filtertrace="yes" -->
+
+  Highlighted text can sometimes not be unhighlit. For example: find succesive tabs in this xml (in presentation/sao/build.xml) with Find, F3
+	<cobertura-instrument datafile="${cobertura-datafile}">
+		<fileset dir="${destdir}">
+			<include name="org/ntropa/utility/**/*.class"/>
+		</fileset>
+        </cobertura-instrument>
+
+  Kate has no revert function
+
+General
+
+DONE: Remove test main methods
+    public static void main (java.lang.String[] args) {
+        junit.textui.TestRunner.run (suite ());
+    }
+
+DONE: Rename SessionChangerSao to SessionChangerSAO
+
+Remove dependency on Commons Lang and Collections. Update deploy-ntropa-to-jboss target after removal.
+
+$ grep -r org.apache.commons $(find -name '*.java')
+./common/utility/src/tests/org/ntropa/utility/HtmlUtilsTest.java:import org.apache.commons.collections.SequencedHashMap;
+./common/utility/src/tests/org/ntropa/utility/CollectionsUtilitiesTest.java:import org.apache.commons.collections.Transformer;
+./common/utility/src/org/ntropa/utility/StandardFilePredicate.java:import org.apache.commons.lang.builder.ToStringBuilder;
+./common/utility/src/org/ntropa/utility/StandardFilePredicate.java:import org.apache.commons.lang.builder.ToStringStyle;
+./common/utility/src/org/ntropa/utility/HtmlUtils.java:import org.apache.commons.collections.SequencedHashMap;
+./common/utility/src/org/ntropa/utility/CollectionsUtilities.java:import org.apache.commons.collections.Transformer;
+./presentation/sao/src/org/ntropa/runtime/sao/forms/SetChoice.java:import org.apache.commons.collections.Predicate;
+./presentation/sao/src/org/ntropa/runtime/sao/StandardFragment.java:import org.apache.commons.collections.Transformer;
+./presentation/wps/src/org/ntropa/build/mapper/LinkFile.java:import org.apache.commons.lang.builder.ToStringBuilder;
+./presentation/wps/src/org/ntropa/build/mapper/Mapper.java:import org.apache.commons.lang.builder.ToStringBuilder;
+./presentation/wps/src/org/ntropa/build/mapper/Mapper.java:import org.apache.commons.lang.builder.ToStringStyle;
+./presentation/wps/src/org/ntropa/build/jsp/JSPBuilder.java:import org.apache.commons.lang.builder.ToStringBuilder;
+./presentation/wps/src/org/ntropa/build/jsp/JSPBuilder.java:import org.apache.commons.lang.builder.ToStringStyle;
+./presentation/wps/src/org/ntropa/build/jsp/StandardFinderSet.java:import org.apache.commons.lang.builder.ToStringBuilder;
+./presentation/wps/src/org/ntropa/build/jsp/StandardFinderSet.java:import org.apache.commons.lang.builder.ToStringStyle;
+./presentation/wps/src/org/ntropa/build/html/ServerActiveHtml.java:import org.apache.commons.lang.builder.ToStringBuilder;
+./presentation/wps/src/org/ntropa/build/html/ServerActiveHtml.java:import org.apache.commons.lang.builder.ToStringStyle;
+./presentation/wps/src/org/ntropa/build/html/Element.java:import org.apache.commons.lang.builder.ToStringBuilder;
+./presentation/wps/src/org/ntropa/build/html/Element.java:import org.apache.commons.lang.builder.ToStringStyle;
+./presentation/wps/src/org/ntropa/build/DirectoryMirror.java:import org.apache.commons.lang.builder.ToStringBuilder;
+./presentation/wps/src/org/ntropa/build/FileMirror.java:import org.apache.commons.lang.builder.ToStringBuilder;
+./presentation/wps/src/org/ntropa/build/FileMirror.java:import org.apache.commons.lang.builder.ToStringStyle;
+./presentation/wps/src/org/ntropa/build/DirectoryMonitor.java:import org.apache.commons.lang.builder.ToStringBuilder;
+./presentation/wps/src/org/ntropa/build/DirectoryMonitor.java:import org.apache.commons.lang.builder.ToStringStyle;
+
+DONE: When a full page template cannot be found the error page might not get written because the page (with the template missing warning present) lacks the meta tag and DOMEditor will throw an error. Fix this so that an error page is always written without making the content-type meta tag optional.
+
+Consider adding the automatic output of a comment giving the name and location
+of the template that this html resulted from. For example this template
+
+/_include/news-items.html
+    <!-- template = "my-news-item" -->
+    item 1...
+    item 2...
+    <!-- template = "/my-news-item" -->
+
+would result in this html
+
+    <!-- template = "my-news-item"  file = "/_include/news-items.html" -->
+    item 1...
+    item 2...
+    <!-- template = "/my-news-item" -->
+
+There would need to be a way to turn this on and off. Either a _presentation
+properties file or in the projected ntropa console.
+
+Support nested elements
+   <!-- element = "news" -->
+   <table border="1">
+     <!-- element = "item" -->
+     <tr><td>$$title$$</td><td>$$content$$</td></tr>
+     <!-- element = "/item" -->
+   </table>
+   <!-- element = "/news" -->
+Maybe render like Groovy builders
+   news.render (
+       item.render();
+   );
+
+Support for the -implicit element in SAHs when using the elements in use-element
+sections:
+
+    <!-- use-element = "-implicit" -->
+        the content of the -implicit element goes here
+    <!-- use-element = "/-implicit" -->
+
+When added deep placeholder replacement turn on this test on MarkedUpHtmlParserTest:
+    public void _testDeepPlaceholderReplacement() throws ServerActiveHtmlException {
+(Deep placeholder replacement is when a Placeholder not at the top level in a parsed
+template is found and replaced.)
+
+
+Code coverage extensions: radon testing.
+
+Static code analysis: http://pmd.sourceforge.net/. Includes test for copy and pasted code.
+
+Add run-time logger log prep call:
+    JSPBuilder (DONE)
+    FileMirror
+    DirectoryMirror (DONE)
+    Template
+    Mapper (DONE)
+    Different DEBUG levels for different channels (Digester for XML config)
+
+Finish test for StandardChannelMonitor.java, adding in different orders
+
+DirectoryMonitor:
+
+    Use a Trie (see org.apache.commons.collections) to store file and directory
+    attributes
+
+    Store type of object to make downstream listeners easy to organise
+
+Is setUploadPrefix used in ChannelData?
+
+Read FIXMEs in JSPBuilder
+
+FIXME in Mapper.isIncludeFile
+
+Add test for FileUtilities.find
+
+Faults(?) with the JUP: add a file called 'home'. Add a file when JUP not running, run
+JUP then 'touch' the file.
+
+Check if com.studylink.main.* is needed. If not delete it.
+Remove com.studylink.main.* when all functionality moved
+ 
+Check use of attribute in UpdateProcessMBean. Add getters to show state in Agent view.
+
+An embedded comment broke Template.java, add this test testEmbeddedCommnet to other parsers:
+MarkedUpHtml (test missing)
+The opening tag is handled, what about the closing tag? Does it run on? Add to TemplateTest.java
+
+Made JUP more tolerant: ie JUP not running, copy in
+files, lauched JUP, touch a file : moans about symlink
+not existing, should add it.
+-
+Improvement for Mapper.java: change action on MODIFIED to conditional ADDED action. This
+may help when the JUP was not running for some reason, files were added, JUP was started
+then the added files were modified to force them throught the JUP. With this change it
+would work otherwise not.
+-
+Do this by sending a FCS back to self.
+
+A SAH markup needs some presentation parameters distinct from elements (Could do this now with the
+new map of attributes approach used in MarkedUpHtmlParser)
+
+Write template selector soa. DONE. Switch to parameters map in the sah in the designer HTML.
+
+Finish SAO
+Added test to ScriptWriterTest.java but didn't finish it. Edit scriptwriterfs. It should go in JSPBuilderTest.
+component_11 = null. <-- found it, line 197 is fix. Can a test case be added?
+
+Add presentation param reference in application parameter: p:error-page
+    Consider using BeanUtils for reflection
+    BeanUtils application parameters : need a one invocation way of getting TYPE and CLASS names for serveractivehtml, frag, el.
+    application parameter look up: Extend look up to do parameter binding like JavaBeans (tm).
+
+FIXME in ScriptWriter
+
+Performance: replace String getPlaceholderReplacement (String name)  with void getPlaceholderReplacement (Properties names ).
+This would reduce the number of times the context needs to be set, and object references retrieved, etc.
+
+IN PROGRESS
+
+Read SAO classes before writing manual.
+
+Check Tidy.setDocType
+Added insertion of tidy warnings into page: JSPBuilder.java, ParsedHTML.java: PARTLY DONE. Any errors
+generated when a template was parsed is lost. See this test case in JSPBuilderTest:
+    public void _testErrorMessagesInsertedWhenEntirePageIsReplacedByATemplate ()
+
+Consider replacing jtidy with NekoHTML
+    http://www.apache.org/~andyc/neko/doc/html/index.html
+    (0.7 downloaded to beast)
+
+Add test to StandardChannelMonitor to test for _application based changes
+
+    Could invoke child.setInvocationContext ( icb ):
+        more or less work for the developer? Could do this in the JSP.
+        Actually it could be very easy: A call to getInvocationContext returns the
+        set InvocationContext if not null, if null it returns the InvocationContext
+        of the parent. The JSP sets the InvocationContext of the top SAO, bingo.
+
+    Add warning when element added twice with same name.
+    WPS does not complain if SAH has duplicate element names.
+
+DONE: Fix multiuser usage, example enhance.out is saved to /tmp and cannot be overwritten by other users.
+
+    Consider this:
+        Add a general purpose, programmable Filter to each channel.
+        Use it to implement flow control from page properties.
+
+    If a SAO implement getPlaceholderReplacement and uses an object in the thread local cache
+    put there in controlSelf, there is no point it can invoke clearThreadLocalCache. This could
+    be a problem with references to Course objects ( but they are outside a txn so do they have locks - no?)
+
+DONE: implement clearing of thread local caches at framework level.
+
+Check this:
+    Remove dependency in the wps package on the Channel package. wps should be independent of this.
+        02-6-13. May have introduced classes into c.s.a.channel which will interfere with this
+                 due to this package being compiled separately.
+        02-6-19  build-channel builds much more than build-application-tier. This is wrong, it should
+                 be the other way around.
+        02-6-20  Move com.studylink.main into c.s.w.main.
+
+DONE: Remove uses of over-complex placeholder replacement chaining.
+    REPLACE
+            /* Delegate to parent container; this is the standard behaviour for AbstractElements */
+            return super.getPlaceholderReplacement ( name ) ;
+    WITH
+            return null ;
+
+        fail ( "In AbstractElement the various contains tests use value based equality test. Is this wrong?" ) ;
+        fail ( "AbstractServerActiveObject public void addChild ( AbstractElement child ) uses containsKey, it looks broken" ) ;
+
+Check this:
+    The package c.s.a.channel is not clearly part of c.s.a as evidenced by the messy file selection for
+        compiling in the ant project. Have another go at making the wps free of dependency on app.
+        Remove the use of ChannelID from the wps. Replace with file name class.
+
+    Follow up. commons-logging in Channel.
+        Remove com.studylink.utility.Logger
+
+Bug:
+
+    When a HTML file is placed under WPS management, missing <head> sections cause the file to be rejected
+    but without any warning the designer can see.
+
+    All these use this test var != "" (always true)
+    presentation/wps/src/org/ntropa/build/jsp/StandardApplicationFinder.java
+    presentation/wps/src/org/ntropa/build/jsp/StandardPresentationFinder.java
+    presentation/wps/src/org/ntropa/build/jsp/StandardTemplateFinder.java
+
+
+Improvements
+
+DONE: Increase width of exported HTML from 72->120, change jtidy output.
+    Make error when sao name can not be looked up instead of using BaseServerActiveObject.
+        There appears to be no value in allowing the failed look up to precede without making
+        a noise in the JSP.
+
+Release tasks
+
+    Check meta tag for caching does not get added if already present.
+
+Check status:
+Cache busting: in progress, next: investigate Cache-Control: no-cache, and Pragma: no-cache for proxies
+    (Get SQUID docs)
+    Add Cache-Control: no-cache to HTML page as well.
+    Cookie expiry?
+
+Design futures
+--------------
+Have forgotten about LOGICAL NAMES for locations, RESULTS_PAGE = /results/results.html
+Think about: presentation parameters could hold Logical -> Physical PAGE mappings, available at
+runtime to SAO via a page relative map construction.
+
+SAOs as controllable objects
+----------------------------
+Look at making marked up elements work in an easier heirarchical fashion. eg:
+    ELEMENT A
+        SUB ELEMENT B
+        SUB ELEMENT C
+        SUB ELEMENT D
+render by invoking ELEMENT A after disabling SUB ELEMENT C, which could be an error message
+
+A SAO could have an 'state controller' attached to it. The state controller then changes the
+state of the sao by taking input from a variety of inputs: requests parameters, session attributes,
+time of day, direct JavaBean manipulation by a controlling SAO (It this JavaBeans in JSP all over
+again?).
+
+In locating child SAO to control a parent SAO could search for the closest name element or it could
+search for any element implementing a given interface. XPath via Jaxen could help with this.
+s
+
+------------
+Done Archive
+------------
+
+DONE: Port DateUtils "too short" fix to Navigator.
+DONE: Synchronise setenv.sh and /etc/ntropa on NAVDEV
+
+
+

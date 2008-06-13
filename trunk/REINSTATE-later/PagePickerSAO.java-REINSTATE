@@ -1,0 +1,262 @@
+/*
+ * PagePickerSAO.java
+ *
+ * Created on 08 March 2002, 17:16
+ */
+
+package com.studylink.sao.common;
+
+import java.util.List;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
+import com.studylink.app.channel.ServiceLocator;
+import com.studylink.app.channel.Session;
+import com.studylink.sao.AbstractElement;
+import com.studylink.sao.BaseServerActiveObject;
+import com.studylink.sao.InvocationContext;
+import com.studylink.sao.PlaceholderReplacementStack;
+import com.studylink.sao.util.ResultsListUtils;
+import com.studylink.utility.IntegerRange;
+
+/**
+ * This class helps render a page picker.
+ * <p>
+ * The course id list is obtained from <code>ServletRequestSAOData</code> so
+ * this must have been set in a controlSelf method somewhere on the same page.
+ *
+ * @author  jdb
+ * @version $Id: PagePickerSAO.java,v 1.10 2006/06/16 11:35:49 jdb Exp $
+ */
+public class PagePickerSAO extends BaseServerActiveObject {
+
+	/**
+	 * This is the name of the Element to use to start the sequence
+	 * of rendered Elements with. Normally it wil be the opening
+	 * tags of a HTML construct. e.g.
+	 *
+	 *  &lt;table style=&quot;border-style: ridge;&quot;&gt;&lt;tr&gt;
+	 *
+	 * This allows the page picker to not be rendered at all if appropriate.
+	 * i.e. when there is just one page of courses.
+	 */
+	private final String ELEMENT_START = "start";
+
+	/**
+	 * This is the name of the Element to use to end the sequence
+	 * of rendered Elements with. Normally it wil be the closing
+	 * tags of a HTML construct. e.g.
+	 *
+	 *  &lt;/tr&gt;&lt;/table&gt;
+	 *
+	 * This allows the page picker to not be rendered at all if appropriate.
+	 * i.e. when there is just one page of courses.
+	 */
+	private final String ELEMENT_END = "end";
+
+	/**
+	 * This is the name of the Element to use to navigate to the previous
+	 * set of pages.
+	 */
+	private final String ELEMENT_PREV_PAGE_SET = "prev";
+
+	/**
+	 * This is the name of the optional Element to use to navigate to the
+	 * previous page.
+	 */
+	private final String ELEMENT_PREV_PAGE = "prev-page";
+
+	/**
+	 * This is the name of the Element to use to navigate to a new page.
+	 */
+	private final String ELEMENT_LINK_PAGE = "link";
+
+	/**
+	 * This is the name of the Element to use to use for the current page.
+	 */
+	private final String ELEMENT_CURRENT_PAGE = "current";
+
+	/**
+	 * This is the name of the optional Element to use to navigate to the
+	 * next page
+	 */
+	private static final String ELEMENT_NEXT_PAGE = "next-page";
+
+	/**
+	 * This is the name of the Element to use to navigate to the next
+	 * set of pages.
+	 */
+	private final String ELEMENT_NEXT_PAGE_SET = "next";
+
+	/**
+	 * The number of pages links to show with numerals. The previous
+	 * and next links are not included in this.
+	 */
+	private static final int NUMBERED_PAGE_LINKS = 10;
+
+	public void render(InvocationContext icb) throws Exception {
+
+		/*
+		 * Store a reference to the InvocationContext so the application
+		 * log can be accessed in AbstractServerActiveObject.
+		 *
+		 * This method does not invoke any child elements which might make
+		 * a callback so it not neccessary to set the invocation context
+		 * for any other reason than logging.
+		 */
+		setInvocationContext(icb);
+
+		HttpServletRequest request = icb.getHttpServletRequest();
+		ServiceLocator serviceLocator = ServiceLocator.getServiceLocator(request);
+		Session session = serviceLocator.getSession(request);
+
+		/* get cached list */
+		List courseIdList = ServletRequestSAOData.newInstance(request).getCourseIdList();
+
+		int coursesPerPage = getCoursesPerPage(session.getCoursesPerPageNumber(), serviceLocator.getCoursesPerPage());
+
+		/*
+		 * Get the value supplied by the URL query arg.
+		 */
+		int queryPage = 0;
+		try {
+			queryPage = Integer.parseInt((String) request.getParameter("page"));
+		} catch (NumberFormatException e) {
+			throw new IllegalStateException("PagePickerSAO trusts the 'page' query arg and it was unparsable");
+		}
+		if (queryPage == 0) {
+			throw new IllegalStateException("PagePickerSAO trusts the 'page' query arg and it was 0");
+		}
+
+		IntegerRange pageRange =
+			getPageRange(queryPage, ResultsListUtils.getPageCount(courseIdList.size(), coursesPerPage));
+
+		if (getDebug() >= 1)
+			log("pageRange: " + pageRange);
+
+		/*
+		 * Get valid references to the Elements we use to render the result list page picker.
+		 *
+		 * getChild () will throw throw the runtime exception NoSuchAbstractElementException
+		 * if the child is missing so there is no need to check the returned value.
+		 * 
+		 * The next page and previous page elements are optional as they were added much later.
+		 */
+		AbstractElement startElement = getChild(ELEMENT_START);
+		AbstractElement endElement = getChild(ELEMENT_END);
+		AbstractElement prevSetElement = getChild(ELEMENT_PREV_PAGE_SET);
+		AbstractElement prevPageElement = childExists(ELEMENT_PREV_PAGE) ? getChild(ELEMENT_PREV_PAGE) : null;
+		AbstractElement linkElement = getChild(ELEMENT_LINK_PAGE);
+		AbstractElement currentElement = getChild(ELEMENT_CURRENT_PAGE);
+		AbstractElement nextPageElement = childExists(ELEMENT_NEXT_PAGE) ? getChild(ELEMENT_NEXT_PAGE) : null;
+		AbstractElement nextSetElement = getChild(ELEMENT_NEXT_PAGE_SET);
+
+		//log ( "Add test for proposed element sequence based on current page, number of courses per page and course count" ) ;
+
+		/*
+		 * If the page range starts at 1 then there is no previous
+		 * link, if the page range starts at other than 1 then there
+		 * must be a previous link.
+		 */
+		int startOfNumberedLinks = 0;
+		if (pageRange.start() == 1)
+			startOfNumberedLinks = 1;
+		else
+			startOfNumberedLinks = pageRange.start() + 1;
+
+		int endOfNumberedLinks = startOfNumberedLinks + NUMBERED_PAGE_LINKS - 1;
+
+		startElement.render(icb);
+
+		PlaceholderReplacementStack stk = getPlaceholderReplacementStack();
+
+		for (int page = pageRange.start(); page <= pageRange.end(); page++) {
+
+			stk.mark();
+			stk.push("page-number", "" + page, false);
+			stk.push("previous-page-number", "" + (queryPage - 1), false);
+			stk.push("next-page-number", "" + (queryPage + 1), false);
+
+			AbstractElement e = null;
+
+			if (page < startOfNumberedLinks) {
+				prevSetElement.render(icb);
+				if (null != prevPageElement)
+					prevPageElement.render(icb);
+			} else if (page > endOfNumberedLinks) {
+				if (null != nextPageElement)
+					nextPageElement.render(icb);
+				nextSetElement.render(icb);
+			} else if (page == queryPage)
+				currentElement.render(icb);
+			else
+				linkElement.render(icb);
+
+			stk.popToMark();
+
+		}
+
+		endElement.render(icb);
+
+	}
+
+	/**
+	 * Return the range of pages to render links to.
+	 *
+	 * We show 10 pages with numerals and optionally a link for the
+	 * previous and next decades.
+	 *
+	 * The method is public to faciliate unit testing
+	 */
+	public IntegerRange getPageRange(int currentPage, int lastPossiblePage) {
+
+		if (currentPage < 1)
+			throw new IllegalArgumentException("Negative current page number: " + currentPage);
+
+		if (lastPossiblePage < 1)
+			throw new IllegalArgumentException("Negative last possible page number: " + lastPossiblePage);
+
+		if (currentPage > lastPossiblePage)
+			throw new IllegalArgumentException(
+				"A current page number greater than the last possible page number is illogical: "
+					+ currentPage
+					+ ">"
+					+ lastPossiblePage);
+
+		/* No previous link */
+		if (currentPage <= NUMBERED_PAGE_LINKS)
+			return new IntegerRange(1, Math.min(lastPossiblePage, NUMBERED_PAGE_LINKS + 1));
+
+		/*
+		 * currentPage > NUMBERED_PAGES_LINKS
+		 */
+
+		/*
+		 * 80 -> 71
+		 * 81 -> 81
+		 * 82 -> 81
+		 * ..
+		 * 89 -> 81
+		 * 90 -> 81
+		 * 91 -> 91
+		 */
+		int startOfNumberedLinks = ((currentPage - 1) / NUMBERED_PAGE_LINKS) * NUMBERED_PAGE_LINKS + 1;
+
+		return new IntegerRange(
+			startOfNumberedLinks - 1,
+			Math.min(lastPossiblePage, startOfNumberedLinks + NUMBERED_PAGE_LINKS));
+	}
+
+	/**
+	 * TODO: refactor, duplicated in BaseResultsListSAO
+	 * @param userChoice The user's choice of courses per page or null
+	 * @param defaultCoursesPerPage The default number of courses per page
+	 * @return The default or the user's choice
+	 */
+	private int getCoursesPerPage(Integer userChoice, int defaultCoursesPerPage) {
+		int coursesPerPage = userChoice == null ? defaultCoursesPerPage : userChoice.intValue();
+		return coursesPerPage;
+	}
+
+}
