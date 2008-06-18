@@ -64,6 +64,7 @@ public class Constants {
             ".bmp",
             ".css",
             ".gif",
+            ".gz",
             ".ico",
             ".jpg",
             ".jpeg",

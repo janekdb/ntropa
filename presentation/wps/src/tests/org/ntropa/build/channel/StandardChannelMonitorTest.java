@@ -315,7 +315,8 @@ public class StandardChannelMonitorTest extends TestCase {
                 "mirrorred-files/authentica.jpg", "mirrorred-files/data.zip", "mirrorred-files/document.pdf",
                 "mirrorred-files/image.gif", "mirrorred-files/screen-shot.bmp", "mirrorred-files/kde-common.css",
                 "mirrorred-files/script.js", "mirrorred-files/site.ico", "mirrorred-files/robots.txt",
-                "mirrorred-files/flash-movie.swf" });
+                "mirrorred-files/flash-movie.swf",
+                "mirrorred-files/sitemap.xml.gz" });
         expectedFcs = new FileChangeSet();
         it = dirs.iterator();
         while (it.hasNext()) {
