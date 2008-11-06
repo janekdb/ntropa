@@ -26,6 +26,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -73,10 +74,15 @@ public class DOMUtils {
             case Node.DOCUMENT_NODE:
                 Document doc = (Document) theNode ;
                 
+                String docNodeLine = "Document node: " + doc.getNodeName ();
+                
+                Element docElement = doc.getDocumentElement();
+                String docElementNodeName = docElement != null ? docElement.getNodeName() : null;
+                String rootElementLine = "Root element: " + docElementNodeName;
+                
                 sb.append (
-                indent + "Document node: " + doc.getNodeName () +
-                "\n" + indent + "Root element: " +
-                doc.getDocumentElement ().getNodeName () );
+                indent + docNodeLine +
+                "\n" + indent + rootElementLine );
                 processChildNodes ( doc.getChildNodes (), indent + INDENT, sb ) ;
                 break ;
                 
