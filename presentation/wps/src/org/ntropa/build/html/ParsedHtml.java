@@ -82,293 +82,294 @@ import org.xml.sax.SAXException;
  */
 public class ParsedHtml {
 
-	private Node _rootNode;
+    private Node _rootNode;
 
-	private PrintWriter _errorOut;
+    private PrintWriter _errorOut;
 
-	/*
-	 * This was set to "iso-8859-1" in one place in the httpunit sources. As I
-	 * don't need to deal in more than one character set yet I'm leaving it out
-	 * for simplicity.
-	 */
-	// private String _characterSet;
-	/*
-	 * public ReceivedPage( URL url, String parentTarget, String pageText,
-	 * String characterSet ) throws SAXException { super( url, parentTarget,
-	 * getDOM( pageText ), characterSet ); setBaseAttributes(); }
-	 */
-	public ParsedHtml(String pageText) throws SAXException {
+    /*
+     * This was set to "iso-8859-1" in one place in the httpunit sources. As I
+     * don't need to deal in more than one character set yet I'm leaving it out
+     * for simplicity.
+     */
+    // private String _characterSet;
+    /*
+     * public ReceivedPage( URL url, String parentTarget, String pageText,
+     * String characterSet ) throws SAXException { super( url, parentTarget,
+     * getDOM( pageText ), characterSet ); setBaseAttributes(); }
+     */
+    public ParsedHtml(String pageText) throws SAXException {
 
-		if (pageText == null)
-			throw new NullPointerException("pageText was null");
+        if (pageText == null)
+            throw new NullPointerException("pageText was null");
 
-		_rootNode = getDOM(pageText);
+        _rootNode = getDOM(pageText);
 
-		// setBaseAttributes ();
-	}
+        // setBaseAttributes ();
+    }
 
-	public ParsedHtml(String pageText, PrintWriter errorOut) throws SAXException {
+    public ParsedHtml(String pageText, PrintWriter errorOut) throws SAXException {
 
-		if (pageText == null)
-			throw new NullPointerException("pageText was null");
+        if (pageText == null)
+            throw new NullPointerException("pageText was null");
 
-		if (errorOut == null)
-			throw new NullPointerException("errorOut was null");
+        if (errorOut == null)
+            throw new NullPointerException("errorOut was null");
 
-		_errorOut = errorOut;
-		_rootNode = getDOM(pageText);
-		/*
-		 * This flush is essential if the PrintWriter has been created like this
-		 * 
-		 * ByteArrayOutputStream baos = new ByteArrayOutputStream () ;
-		 * PrintWriter errorOut = new PrintWriter ( baos ) ;
-		 * 
-		 * Without the invocation the backing array may be empty even if text
-		 * was written to the PrintWriter. This was happening for the
-		 * BROKEN_HTML page in ParsedHtmlTest.
-		 */
-		errorOut.flush();
+        _errorOut = errorOut;
+        _rootNode = getDOM(pageText);
+        /*
+         * This flush is essential if the PrintWriter has been created like this
+         * 
+         * ByteArrayOutputStream baos = new ByteArrayOutputStream () ;
+         * PrintWriter errorOut = new PrintWriter ( baos ) ;
+         * 
+         * Without the invocation the backing array may be empty even if text
+         * was written to the PrintWriter. This was happening for the
+         * BROKEN_HTML page in ParsedHtmlTest.
+         */
+        errorOut.flush();
 
-	}
+    }
 
-	/**
-	 * Returns the title of the page.
-	 */
-	public String getTitle() throws SAXException {
-		NodeList nl = ((Document) getDOM()).getElementsByTagName("title");
-		if (nl.getLength() == 0)
-			return "";
-		if (!nl.item(0).hasChildNodes())
-			return "";
-		return nl.item(0).getFirstChild().getNodeValue();
-	}
+    /**
+     * Returns the title of the page.
+     */
+    public String getTitle() throws SAXException {
+        NodeList nl = ((Document) getDOM()).getElementsByTagName("title");
+        if (nl.getLength() == 0)
+            return "";
+        if (!nl.item(0).hasChildNodes())
+            return "";
+        return nl.item(0).getFirstChild().getNodeValue();
+    }
 
-	private int _parseErrorCount = 0;
+    private int _parseErrorCount = 0;
 
-	/**
-	 * Tidy mixes warnings in with errors in the text it sends to _errorOut so
-	 * we provide a way for the client to check if any 'serious' errors
-	 * occurred.
-	 * 
-	 * @return The number of parse errors encountered in the last parse
-	 */
-	public int getParseErrorCount() {
-		return _parseErrorCount;
-	}
+    /**
+     * Tidy mixes warnings in with errors in the text it sends to _errorOut so
+     * we provide a way for the client to check if any 'serious' errors
+     * occurred.
+     * 
+     * @return The number of parse errors encountered in the last parse
+     */
+    public int getParseErrorCount() {
+        return _parseErrorCount;
+    }
 
-	private Node getDOM(String pageText) throws SAXException {
-		try {
-			Tidy tidy = getParser();
-			Node node = tidy.parseDOM(new ByteArrayInputStream(pageText.getBytes(getUTFEncodingName())), null);
+    private Node getDOM(String pageText) throws SAXException {
+        try {
+            Tidy tidy = getParser();
+            Node node = tidy.parseDOM(new ByteArrayInputStream(pageText.getBytes(getUTFEncodingName())), null);
 
-			_parseErrorCount = tidy.getParseErrors();
+            _parseErrorCount = tidy.getParseErrors();
 
-			return node;
-			// return getParser ().parseDOM ( new ByteArrayInputStream (
-			// pageText.getBytes ( getUTFEncodingName () ) ), null );
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException("UTF-8 encoding failed");
-		}
-	}
+            return node;
+            // return getParser ().parseDOM ( new ByteArrayInputStream (
+            // pageText.getBytes ( getUTFEncodingName () ) ), null );
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("UTF-8 encoding failed");
+        }
+    }
 
-	/**
-	 * Returns a copy of the domain object model associated with this page.
-	 */
-	public Node getDOM() {
-		return _rootNode.cloneNode( /* deep */true);
-	}
+    /**
+     * Returns a copy of the domain object model associated with this page.
+     */
+    public Node getDOM() {
+        return _rootNode.cloneNode( /* deep */true);
+    }
 
-	/**
-	 * Saves a copy of the passed in domain object model. The association with
-	 * the initial page may no longer be valid.
-	 */
-	public void setDOM(Node rootNode) {
-		_rootNode = rootNode.cloneNode( /* deep */true);
-	}
+    /**
+     * Saves a copy of the passed in domain object model. The association with
+     * the initial page may no longer be valid.
+     */
+    public void setDOM(Node rootNode) {
+        _rootNode = rootNode.cloneNode( /* deep */true);
+    }
 
-	// ---------------------------------- private members
-	// --------------------------------
+    // ---------------------------------- private members
+    // --------------------------------
 
-	private static String _utfEncodingName;
+    private static String _utfEncodingName;
 
-	private static String getUTFEncodingName() {
-		if (_utfEncodingName == null) {
-			String versionNum = System.getProperty("java.version");
-			if (versionNum.startsWith("1.1"))
-				_utfEncodingName = "UTF8";
-			else
-				_utfEncodingName = "UTF-8";
-		}
-		return _utfEncodingName;
-	}
+    private static String getUTFEncodingName() {
+        if (_utfEncodingName == null) {
+            String versionNum = System.getProperty("java.version");
+            if (versionNum.startsWith("1.1"))
+                _utfEncodingName = "UTF8";
+            else
+                _utfEncodingName = "UTF-8";
+        }
+        return _utfEncodingName;
+    }
 
-	/*
-	 * private void setBaseAttributes () throws SAXException { NodeList nl =
-	 * ((Document) getDOM ()).getElementsByTagName ( "base" ); if (nl.getLength () ==
-	 * 0) return; try { applyBaseAttributes ( NodeUtils.getNodeAttribute (
-	 * nl.item (0), "href" ), NodeUtils.getNodeAttribute ( nl.item (0), "target" ) ); }
-	 * catch (MalformedURLException e) { throw new RuntimeException ( "Unable to
-	 * set document base: " + e ); } }
-	 * 
-	 * 
-	 * private void applyBaseAttributes ( String baseURLString, String
-	 * baseTarget ) throws MalformedURLException { if (baseURLString.length () >
-	 * 0) { this.setBaseURL ( new URL ( baseURLString ) ); } if
-	 * (baseTarget.length () > 0) { this.setBaseTarget ( baseTarget ); } }
-	 */
+    /*
+     * private void setBaseAttributes () throws SAXException { NodeList nl =
+     * ((Document) getDOM ()).getElementsByTagName ( "base" ); if (nl.getLength () ==
+     * 0) return; try { applyBaseAttributes ( NodeUtils.getNodeAttribute (
+     * nl.item (0), "href" ), NodeUtils.getNodeAttribute ( nl.item (0), "target" ) ); }
+     * catch (MalformedURLException e) { throw new RuntimeException ( "Unable to
+     * set document base: " + e ); } }
+     * 
+     * 
+     * private void applyBaseAttributes ( String baseURLString, String
+     * baseTarget ) throws MalformedURLException { if (baseURLString.length () >
+     * 0) { this.setBaseURL ( new URL ( baseURLString ) ); } if
+     * (baseTarget.length () > 0) { this.setBaseTarget ( baseTarget ); } }
+     */
 
-	private/* static */Tidy getParser() {
-		Tidy tidy = new Tidy();
-		tidy.setCharEncoding(org.w3c.tidy.Configuration.UTF8);
+    private/* static */Tidy getParser() {
+        Tidy tidy = new Tidy();
+        tidy.setCharEncoding(org.w3c.tidy.Configuration.UTF8);
 
-		/*
-		 * No 'Parsing X', guessing DTD or summary.
-		 */
-		tidy.setQuiet(true);
+        /*
+         * No 'Parsing X', guessing DTD or summary.
+         */
+        tidy.setQuiet(true);
 
-		/*
-		 * TidyMark - if true add meta element indicating tidied doc
-		 */
-		tidy.setTidyMark(false);
+        /*
+         * TidyMark - if true add meta element indicating tidied doc
+         */
+        tidy.setTidyMark(false);
 
-		// tidy.setShowWarnings ( HttpUnitOptions.getParserWarningsEnabled () );
-		// 01-12-21 tidy.setShowWarnings ( false );
-		/*
-		 * Changing this to true allowed _errorOut to get warnings. (More likely
-		 * it was the lack of a PrintWriter.flush that we were experiencing.)
-		 */
-		tidy.setShowWarnings(false);
+        // tidy.setShowWarnings ( HttpUnitOptions.getParserWarningsEnabled () );
+        // 01-12-21 tidy.setShowWarnings ( false );
+        /*
+         * Changing this to true allowed _errorOut to get warnings. (More likely
+         * it was the lack of a PrintWriter.flush that we were experiencing.)
+         */
+        tidy.setShowWarnings(false);
 
-		// System.out.println("getOnlyErrors: " + tidy.getOnlyErrors () );
-		/*
-		 * 02-4-14, try to stop cast bobby. Didn't work, warning about missing
-		 * alt come through
-		 */
-		tidy.setOnlyErrors(true);
+        // System.out.println("getOnlyErrors: " + tidy.getOnlyErrors () );
+        /*
+         * 02-4-14, try to stop cast bobby. Didn't work, warning about missing
+         * alt come through
+         */
+        tidy.setOnlyErrors(true);
 
-		/* Use stream for errors if available */
-		if (_errorOut != null)
-			tidy.setErrout(_errorOut);
+        /* Use stream for errors if available */
+        if (_errorOut != null)
+            tidy.setErrout(_errorOut);
 
-		return tidy;
-	}
+        return tidy;
+    }
 
-	/*
-	 * 02-4-13 jdb private Tidy getParser () { Tidy tidy = new Tidy ();
-	 * tidy.setCharEncoding ( org.w3c.tidy.Configuration.UTF8 ); tidy.setQuiet (
-	 * true ); /* TidyMark - if true add meta element indicating tidied doc * /
-	 * tidy.setTidyMark ( false );
-	 * 
-	 * //tidy.setShowWarnings ( HttpUnitOptions.getParserWarningsEnabled () );
-	 * //01-12-21 tidy.setShowWarnings ( false ); /* Changing this to true
-	 * allowed _errorOut to get warnings * / tidy.setShowWarnings ( true ); //
-	 * tidy.setOnlyErrors ( true ); /* Use stream for errors if available * / if (
-	 * _errorOut != null ) tidy.setErrout ( _errorOut ) ;
-	 * 
-	 * return tidy; }
-	 */
+    /*
+     * 02-4-13 jdb private Tidy getParser () { Tidy tidy = new Tidy ();
+     * tidy.setCharEncoding ( org.w3c.tidy.Configuration.UTF8 ); tidy.setQuiet (
+     * true ); /* TidyMark - if true add meta element indicating tidied doc * /
+     * tidy.setTidyMark ( false );
+     * 
+     * //tidy.setShowWarnings ( HttpUnitOptions.getParserWarningsEnabled () );
+     * //01-12-21 tidy.setShowWarnings ( false ); /* Changing this to true
+     * allowed _errorOut to get warnings * / tidy.setShowWarnings ( true ); //
+     * tidy.setOnlyErrors ( true ); /* Use stream for errors if available * / if (
+     * _errorOut != null ) tidy.setErrout ( _errorOut ) ;
+     * 
+     * return tidy; }
+     */
 
-	private static final String DTD_PUBLIC_DEFAULT = "-//W3C//DTD HTML 4.01 Transitional//EN";
+    private static final String DTD_PUBLIC_DEFAULT = "-//W3C//DTD HTML 4.01 Transitional//EN";
 
-	private static final String DTD_SYSTEM_DEFAULT = "http://www.w3.org/TR/html4/loose.dtd";
+    private static final String DTD_SYSTEM_DEFAULT = "http://www.w3.org/TR/html4/loose.dtd";
 
-	private String publidId = DTD_PUBLIC_DEFAULT;
+    private String publidId = DTD_PUBLIC_DEFAULT;
 
-	/**
-	 * @param publicId
-	 *            The string to use for the public id. Defaults to
-	 *            {@value DTD_PUBLIC_DEFAULT}. Null is accepted.
-	 */
-	public void setPublicId(String publicId) {
-		this.publidId = publicId;
-	}
+    /**
+     * @param publicId
+     *            The string to use for the public id. Defaults to
+     *            {@value DTD_PUBLIC_DEFAULT}. Null is accepted.
+     */
+    public void setPublicId(String publicId) {
+        this.publidId = publicId;
+    }
 
-	private String getPublicId() {
-		return publidId;
-	}
+    private String getPublicId() {
+        return publidId;
+    }
 
-	private String systemId = DTD_SYSTEM_DEFAULT;
+    private String systemId = DTD_SYSTEM_DEFAULT;
 
-	/**
-	 * @param systemId
-	 *            The string to use for the system id. Defaults to
-	 *            {@value DTD_SYSTEM_DEFAULT}. Null is accepted.
-	 */
-	public void setSystemId(String systemId) {
-		this.systemId = systemId;
-	}
+    /**
+     * @param systemId
+     *            The string to use for the system id. Defaults to
+     *            {@value DTD_SYSTEM_DEFAULT}. Null is accepted.
+     */
+    public void setSystemId(String systemId) {
+        this.systemId = systemId;
+    }
 
-	private String getSystemId() {
-		return systemId;
-	}
+    private String getSystemId() {
+        return systemId;
+    }
 
-	/**
-	 * source: http://dcb.sun.com/technology/xml/qa_archive/qa061501.html
-	 */
-	public String toString() {
+    /**
+     * source: http://dcb.sun.com/technology/xml/qa_archive/qa061501.html
+     */
+    public String toString() {
 
-		Document doc = (Document) _rootNode;
+        Document doc = (Document) _rootNode;
 
-		BaseMarkupSerializer serializer = new HTMLSerializer();
-		// 01-10-3 serializer= new org.apache.xml.serialize.XHTMLSerializer ();
+        BaseMarkupSerializer serializer = new HTMLSerializer();
+        // 01-10-3 serializer= new org.apache.xml.serialize.XHTMLSerializer ();
 
-		java.io.StringWriter writer = new java.io.StringWriter();
+        java.io.StringWriter writer = new java.io.StringWriter();
 
-		serializer.setOutputCharStream(writer);
+        serializer.setOutputCharStream(writer);
 
-		OutputFormat format = new OutputFormat(doc);
-		// What encoding? The default is UTF-8.
+        OutputFormat format = new OutputFormat(doc);
+        // What encoding? The default is UTF-8.
 
-		/*
-		 * System.out.println("OutputFormat.getEncoding (): " +
-		 * format.getEncoding() ); System.out.println("OutputFormat.getIndenting
-		 * (): " + format.getIndenting() );
-		 * System.out.println("OutputFormat.getIndent (): " + format.getIndent() );
-		 * System.out.println("OutputFormat.getLineWidth (): " +
-		 * format.getLineWidth() );
-		 * System.out.println("OutputFormat.getPreserveEmptyAttributes (): " +
-		 * format.getPreserveEmptyAttributes() );
-		 */
+        /*
+         * System.out.println("OutputFormat.getEncoding (): " +
+         * format.getEncoding() ); System.out.println("OutputFormat.getIndenting
+         * (): " + format.getIndenting() );
+         * System.out.println("OutputFormat.getIndent (): " + format.getIndent() );
+         * System.out.println("OutputFormat.getLineWidth (): " +
+         * format.getLineWidth() );
+         * System.out.println("OutputFormat.getPreserveEmptyAttributes (): " +
+         * format.getPreserveEmptyAttributes() );
+         */
 
-		format.setIndenting(true);
-		format.setIndent(1);
-		format.setLineWidth(120);
+        format.setIndenting(true);
+        format.setIndent(1);
+        format.setLineWidth(120);
 
-		// http://xerces.apache.org/xerces2-j/javadocs/other/index.html
-		// DocumentType dtd = doc.getDoctype();
+        // http://xerces.apache.org/xerces2-j/javadocs/other/index.html
+        // DocumentType dtd = doc.getDoctype();
 
-		// The DTD seemed to be unspecified:
-		//
-		// System.out.println("DTD PUBLIC: "+ dtd.getPublicId());
-		// System.out.println("DTD SYSTEM: "+ dtd.getSystemId());
-		// [junit] DTD PUBLIC: null
-		// [junit] DTD SYSTEM: null
-		//
-		// but it was serializing as
-		// "-//W3C//DTD HTML 4.01//EN"
-		// "http://www.w3.org/TR/html4/strict.dtd"
+        // The DTD seemed to be unspecified:
+        //
+        // System.out.println("DTD PUBLIC: "+ dtd.getPublicId());
+        // System.out.println("DTD SYSTEM: "+ dtd.getSystemId());
+        // [junit] DTD PUBLIC: null
+        // [junit] DTD SYSTEM: null
+        //
+        // but it was serializing as
+        // "-//W3C//DTD HTML 4.01//EN"
+        // "http://www.w3.org/TR/html4/strict.dtd"
 
-		// The DTD needs to be removed for #setDoctype to take effect
-		// doc.removeChild(dtd);
+        // The DTD needs to be removed for #setDoctype to take effect
+        // doc.removeChild(dtd);
 
-		// See XLM-241
-		format.setDoctype(getPublicId(), getSystemId());
+        // See XLM-241
+        format.setDoctype(getPublicId(), getSystemId());
 
-		/*
-		 * Tried this to stop attributes being transformed from <input is-chkd>
-		 * to <input is-chkd="is-chkd"> format.setPreserveEmptyAttributes ( true ) ;
-		 * result: Warning: unknown attribute "is-chkd"
-		 */
-		serializer.setOutputFormat(format);
-		try {
-			serializer.serialize(doc);
-			writer.close();
-		} catch (java.io.IOException e) {
-			return null;
-		}
-		//System.out.println("[ParsedHtml]: \n" + writer.toString().substring(0, 200));
-		return writer.toString();
-	}
+        /*
+         * Tried this to stop attributes being transformed from <input is-chkd>
+         * to <input is-chkd="is-chkd"> format.setPreserveEmptyAttributes ( true ) ;
+         * result: Warning: unknown attribute "is-chkd"
+         */
+        serializer.setOutputFormat(format);
+        try {
+            serializer.serialize(doc);
+            writer.close();
+        } catch (java.io.IOException e) {
+            return null;
+        }
+        // System.out.println("[ParsedHtml]: \n" +
+        // writer.toString().substring(0, 200));
+        return writer.toString();
+    }
 }
 
 // Copyright notice from original com.meterware.httpunit.ReceivedPage.java
