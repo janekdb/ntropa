@@ -206,10 +206,16 @@ public class ParsedHtml {
             return;
         }
         Element title = (Element) titles.item(0);
-        System.out.println("maybeRemoveTitleElement: title:\n" + DOMUtils.toString(title));
+//        System.out.println("maybeRemoveTitleElement: title:\n" + DOMUtils.toString(title));
         boolean hasContent = title.hasChildNodes() && title.getFirstChild().getNodeValue().length() > 0;
-        System.out.println("maybeRemoveTitleElement: title.hasContent: " + hasContent);
+//        System.out.println("maybeRemoveTitleElement: title.hasContent: " + hasContent);
         if (hasContent) {
+            return;
+        }
+        
+        /* Do not remove the empty title if it was present in the input text */
+        boolean emptyTitleWasDesired = pageText.toLowerCase().indexOf("<title></title>") != -1;
+        if(emptyTitleWasDesired){
             return;
         }
         head.removeChild(title);
