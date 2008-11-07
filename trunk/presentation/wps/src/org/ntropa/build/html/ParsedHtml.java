@@ -38,8 +38,10 @@ import java.io.UnsupportedEncodingException;
 import org.apache.xml.serialize.BaseMarkupSerializer;
 import org.apache.xml.serialize.HTMLSerializer;
 import org.apache.xml.serialize.OutputFormat;
+import org.ntropa.utility.DOMUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.tidy.Tidy;
 import org.xml.sax.SAXException;
@@ -82,7 +84,7 @@ import org.xml.sax.SAXException;
  */
 public class ParsedHtml {
 
-    private Node _rootNode;
+    private Document _rootNode;
 
     private PrintWriter _errorOut;
 
@@ -131,17 +133,17 @@ public class ParsedHtml {
 
     }
 
-    /**
-     * Returns the title of the page.
-     */
-    public String getTitle() throws SAXException {
-        NodeList nl = ((Document) getDOM()).getElementsByTagName("title");
-        if (nl.getLength() == 0)
-            return "";
-        if (!nl.item(0).hasChildNodes())
-            return "";
-        return nl.item(0).getFirstChild().getNodeValue();
-    }
+    // /**
+    // * Returns the title of the page.
+    // */
+    // public String getTitle() throws SAXException {
+    // NodeList nl = getDOM().getElementsByTagName("title");
+    // if (nl.getLength() == 0)
+    // return "";
+    // if (!nl.item(0).hasChildNodes())
+    // return "";
+    // return nl.item(0).getFirstChild().getNodeValue();
+    // }
 
     private int _parseErrorCount = 0;
 
@@ -156,14 +158,14 @@ public class ParsedHtml {
         return _parseErrorCount;
     }
 
-    private Node getDOM(String pageText) throws SAXException {
+    private Document getDOM(String pageText) throws SAXException {
         try {
             Tidy tidy = getParser();
-            Node node = tidy.parseDOM(new ByteArrayInputStream(pageText.getBytes(getUTFEncodingName())), null);
-
+            Document doc = tidy.parseDOM(new ByteArrayInputStream(pageText.getBytes(getUTFEncodingName())), null);
+            maybeRemoveTitleElement(doc, pageText);
             _parseErrorCount = tidy.getParseErrors();
 
-            return node;
+            return doc;
             // return getParser ().parseDOM ( new ByteArrayInputStream (
             // pageText.getBytes ( getUTFEncodingName () ) ), null );
         } catch (UnsupportedEncodingException e) {
@@ -171,19 +173,61 @@ public class ParsedHtml {
         }
     }
 
+    private void maybeRemoveTitleElement(Document doc, String pageText) {
+        /*
+         * If the title element is empty it might have been added by Tidy. If
+         * Tidy added the title element remove it
+         */
+
+        // System.out.println("maybeRemoveTitleElement:\n" +
+        // DOMUtils.toString(doc));
+        /*
+         * PDL: If an empty title exists remove it unless the input text
+         * included an empty title. This is cleaner than checking the input text
+         * for no title element and then removing the title element from the
+         * Node.
+         */
+        NodeList heads = doc.getElementsByTagName("head");
+        if (heads.getLength() != 1) {
+            /*
+             * A bad input page might not have exactly one head node. This
+             * should be ignored because this method is only concerned with
+             * handling valid Documents.
+             */
+            return;
+        }
+        Element head = (Element) heads.item(0);
+        NodeList titles = head.getElementsByTagName("title");
+        if (titles.getLength() != 1) {
+            /*
+             * Ignore for the same reason that the not exactly one head
+             * condition was ignored.
+             */
+            return;
+        }
+        Element title = (Element) titles.item(0);
+        System.out.println("maybeRemoveTitleElement: title:\n" + DOMUtils.toString(title));
+        boolean hasContent = title.hasChildNodes() && title.getFirstChild().getNodeValue().length() > 0;
+        System.out.println("maybeRemoveTitleElement: title.hasContent: " + hasContent);
+        if (hasContent) {
+            return;
+        }
+        head.removeChild(title);
+    }
+
     /**
      * Returns a copy of the domain object model associated with this page.
      */
-    public Node getDOM() {
-        return _rootNode.cloneNode( /* deep */true);
+    public Document getDOM() {
+        return (Document) _rootNode.cloneNode( /* deep */true);
     }
 
     /**
      * Saves a copy of the passed in domain object model. The association with
      * the initial page may no longer be valid.
      */
-    public void setDOM(Node rootNode) {
-        _rootNode = rootNode.cloneNode( /* deep */true);
+    public void setDOM(Document rootNode) {
+        _rootNode = (Document) rootNode.cloneNode( /* deep */true);
     }
 
     // ---------------------------------- private members
