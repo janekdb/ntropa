@@ -89,6 +89,11 @@ public class ParsedHtmlTest extends TestCase {
     final List<String> titlelessHtmlPageTagList = Arrays.asList(new String[] { "!DOCTYPE", "html", "head", "/head",
             "body", "/body", "/html" });
 
+    final String EMPTY_TITLE_HTML_PAGE = "<html><head><title></title></head><body></body></html>";
+
+    final List<String> emptyTitleHtmlPageTagList = Arrays.asList(new String[] { "!DOCTYPE", "html", "head", "title",
+            "/title", "/head", "body", "/body", "/html" });
+
     public ParsedHtmlTest(String testName) {
         super(testName);
     }
@@ -267,22 +272,22 @@ public class ParsedHtmlTest extends TestCase {
 
     public void testEmptyPageIsParsed() throws SAXException {
         ParsedHtml ph = new ParsedHtml("");
-        assertEquals("", ph.toString()) ;
+        assertEquals("", ph.toString());
     }
 
     public void testTitleElementNotDefaulted() throws SAXException {
         ParsedHtml ph = new ParsedHtml(TITLELESS_HTML_PAGE);
 
-        String html = "" + ph;
-        System.out.println("ParsedHtml.toString () :\n" + html);
+        String html = ph.toString();
         compareTagOrder(html, titlelessHtmlPageTagList);
-
     }
 
-    public void testEmptyTitleElementIsRetained() {
-        fail("Not finished");
-    }
+    public void testEmptyTitleElementIsRetained() throws SAXException{
+        ParsedHtml ph = new ParsedHtml(EMPTY_TITLE_HTML_PAGE);
 
+        String html = ph.toString();
+        compareTagOrder(html, emptyTitleHtmlPageTagList);
+    }
 
     public void testReminder() {
         fail("        consider passing only the head to this class in JSPBuilder to reduce parse time.");
