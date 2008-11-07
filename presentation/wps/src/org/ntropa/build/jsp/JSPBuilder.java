@@ -543,12 +543,12 @@ public class JSPBuilder implements FileListener, Logger {
          * 2. DOM manipulations
          */
         try {
-            Node dom = parsedHtml.getDOM();
+            Document dom = parsedHtml.getDOM();
             // domEditor.editDOM ( dom, pageType, finderSet ) ;
             domEditor.insertPlaceholders(dom);
             // The DTD must be removed to allow a different DTD to be set
             // by ParsedHtml#toString
-            domEditor.removeDoctype((Document) dom);
+            domEditor.removeDoctype(dom);
             parsedHtml.setDOM(dom);
         } catch (Exception e) {
             log("build: error while editing DOM: " + _destFile + "\n" + e);
