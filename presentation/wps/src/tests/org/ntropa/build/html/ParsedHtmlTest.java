@@ -87,7 +87,7 @@ public class ParsedHtmlTest extends TestCase {
     final String TITLELESS_HTML_PAGE = "<html><head></head><body></body></html>";
 
     final List<String> titlelessHtmlPageTagList = Arrays.asList(new String[] { "!DOCTYPE", "html", "head", "/head",
-            "body", "/html" });
+            "body", "/body", "/html" });
 
     public ParsedHtmlTest(String testName) {
         super(testName);
@@ -265,6 +265,11 @@ public class ParsedHtmlTest extends TestCase {
 
     }
 
+    public void testEmptyPageIsParsed() throws SAXException {
+        ParsedHtml ph = new ParsedHtml("");
+        assertEquals("", ph.toString()) ;
+    }
+
     public void testTitleElementNotDefaulted() throws SAXException {
         ParsedHtml ph = new ParsedHtml(TITLELESS_HTML_PAGE);
 
@@ -274,8 +279,17 @@ public class ParsedHtmlTest extends TestCase {
 
     }
 
+    public void testEmptyTitleElementIsRetained() {
+        fail("Not finished");
+    }
+
+
+    public void testReminder() {
+        fail("        consider passing only the head to this class in JSPBuilder to reduce parse time.");
+    }
+
     private void removeDoctype(ParsedHtml ph) {
-        Document doc = (Document) ph.getDOM();
+        Document doc = ph.getDOM();
         doc.removeChild(doc.getDoctype());
         ph.setDOM(doc);
     }
