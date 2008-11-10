@@ -18,6 +18,10 @@ DONE: Deployment to NAVDEV:
   DONE: ntropa.properties
   DONE: migrate from jboss to ntropa daemon
 
+This error was caused by Scripts being unreadable by ntropa. Improve the message to reference that situation,
+java.lang.NullPointerException: File.listFiles() returned null: File.getAbsolutePath () = '/var/ntropa/input/master/Scripts'
+        at org.ntropa.build.DirectoryMonitor.readFiles(DirectoryMonitor.java:297)
+
 
 Pass only the head of the html document to ParsedHtml in JSPBuilder
 Rename ParsedHtml
