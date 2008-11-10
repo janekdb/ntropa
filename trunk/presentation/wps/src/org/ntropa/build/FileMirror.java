@@ -49,7 +49,7 @@ public class FileMirror implements FileListener {
     private void copy(File source, File dest) {
 
         if (!FileUtilities.makeSymbolicLink(source, dest)) {
-            log("Failed to create symbolic link:\n" + "Source: " + source + "\nDestincation: " + dest);
+            log("Failed to create symbolic link:\n" + "Source: " + source + "\nDestination: " + dest);
         }
 
     }
