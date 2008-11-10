@@ -18,6 +18,9 @@ DONE: Deployment to NAVDEV:
   DONE: ntropa.properties
   DONE: migrate from jboss to ntropa daemon
 
+Debug "Too many open files" using lsof -u ntropa and adding a delay before throwing this exception in DirectoryMonitor
+            throw new NullPointerException("File.listFiles() returned null: File.getAbsolutePath () = '"
+
 This error was caused by Scripts being unreadable by ntropa. Improve the message to reference that situation,
 java.lang.NullPointerException: File.listFiles() returned null: File.getAbsolutePath () = '/var/ntropa/input/master/Scripts'
         at org.ntropa.build.DirectoryMonitor.readFiles(DirectoryMonitor.java:297)
