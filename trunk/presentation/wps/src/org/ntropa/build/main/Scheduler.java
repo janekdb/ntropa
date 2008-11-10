@@ -160,7 +160,7 @@ public class Scheduler implements Runnable {
 
             }
 
-            statistics(System.currentTimeMillis() - curMillis);
+            //statistics(System.currentTimeMillis() - curMillis);
 
             /*
              * Wait some time before checking all channels again.

@@ -274,7 +274,7 @@ public class FileUtilities {
      * match the given FilePredicate.
      * 
      * @param rootDir
-     *            The directoryto start the find in.
+     *            The directory to start the find in.
      * @return filePredicate A <code>FilePredicate</code> used to test each
      *         file for inclusion in the result set.
      */
