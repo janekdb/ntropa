@@ -289,10 +289,6 @@ public class ParsedHtmlTest extends TestCase {
         compareTagOrder(html, emptyTitleHtmlPageTagList);
     }
 
-    public void testReminder() {
-        fail("        consider passing only the head to this class in JSPBuilder to reduce parse time.");
-    }
-
     private void removeDoctype(ParsedHtml ph) {
         Document doc = ph.getDOM();
         doc.removeChild(doc.getDoctype());

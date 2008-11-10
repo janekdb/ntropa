@@ -1166,6 +1166,10 @@ public class JSPBuilderTest extends TestCase {
         assertEquals(0, jspIncludeDirectory.list().length);
     }
 
+    public void _testReminder() {
+        fail("Consider passing only the head to ParsedHtml reduce parse time.");
+    }
+
     /* shared methods */
 
     private static final String ISO_8859_1 = "ISO-8859-1";
