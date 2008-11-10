@@ -18,6 +18,10 @@ DONE: Deployment to NAVDEV:
   DONE: ntropa.properties
   DONE: migrate from jboss to ntropa daemon
 
+
+Pass only the head of the html document to ParsedHtml in JSPBuilder
+Rename ParsedHtml
+
 Add missing template logging
   At build time
   At runtime
