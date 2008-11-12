@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -268,7 +269,9 @@ public class StandardApplicationFinder implements ApplicationFinder {
 				 */
 				try {
 					Properties p = new Properties();
-					p.load(new FileInputStream(appParamFile));
+					InputStream is =new FileInputStream(appParamFile); 
+					p.load(is);
+					is.close();
 					Properties q = CollectionsUtilities.getPropertiesSubset(p, propertyPrefix);
 
 					/*
