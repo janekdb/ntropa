@@ -140,6 +140,8 @@
         <!-- Prepare common directories. -->
         <!-- non-existent parent dirs are created -->
         <mkdir dir="${ntropa.build}/lib"/>
+    	<!-- If a test failed and was not able to remove it's fixture do it here. -->
+    	<delete dir="${ntropa.build.work}"/>
         <mkdir dir="${ntropa.build.work}"/>
     </target>
 
