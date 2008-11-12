@@ -2,6 +2,8 @@ NTROPA
 
 TODO:
 
+Port PlaceholderReplacementStack.pushLink from nav.
+
 Add release code to ntropa-runtime.jar
 Use to replace com.studylink.sao.* runtime files
 
@@ -20,7 +22,8 @@ DONE: Deployment to NAVDEV:
 
 Debug "Too many open files" using lsof -u ntropa and adding a delay before throwing this exception in DirectoryMonitor
             throw new NullPointerException("File.listFiles() returned null: File.getAbsolutePath () = '"
-
+  Report this as a new bug pattern to FindBugs.
+  
 This error was caused by Scripts being unreadable by ntropa. Improve the message to reference that situation,
 java.lang.NullPointerException: File.listFiles() returned null: File.getAbsolutePath () = '/var/ntropa/input/master/Scripts'
         at org.ntropa.build.DirectoryMonitor.readFiles(DirectoryMonitor.java:297)
