@@ -53,9 +53,6 @@ import org.ntropa.utility.FileUtilities;
  */
 public class Template {
 
-    // private static final String PAGE_DIRECTIVE =
-    // "<%@ page errorPage=\"/error.html\" %>" ;
-
     private String _baseName;
 
     private String _html;
@@ -66,7 +63,7 @@ public class Template {
 
     /**
      * 
-     * @return The encoding for all files handled by this
+     * @return The encoding for all files handled by this Template
      */
     private Charset getEncoding() {
         return encoding;
@@ -360,15 +357,6 @@ public class Template {
     static public void setTomcat4BugWorkaround(boolean flag) {
         _tomcat4BugWorkaround = flag;
     }
-
-    /**
-     * FIXME: use proper logger passed in at construction.
-     */
-    private void log(String msg) {
-        System.out.println(msg);
-    }
-
-    // private static Charset FOO_CHARSET = Charset.forName("UTF-8");
 
     /**
      * Search the given directory for a template file matching the template
