@@ -46,7 +46,6 @@ import org.ntropa.utility.HtmlUtils;
 import org.ntropa.utility.Logger;
 import org.ntropa.utility.StandardFilePredicate;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 /**
@@ -363,9 +362,6 @@ public class JSPBuilder implements FileListener, Logger {
 
     public static final String TEMPLATE_EXTENSION = ".template";
 
-    // private static final String MAIN_PAGE_DIRECTIVE =
-    // "<%@ page errorPage=\"/error.html\" %>" ;
-
     private static StandardFilePredicate _isTemplatePage;
 
     protected static String INCLUDE_DIR;
@@ -629,12 +625,11 @@ public class JSPBuilder implements FileListener, Logger {
         }
 
         /*
-         * 5. Write to disk. FIXME: Isolate MAIN_PAGE_DIRECTIVE. This way of
-         * adding the page directive is wrong and is in just for testing.
+         * 5. Write to disk if changed. Writing a unchanged file advances the modification
+         * time causing pointless further updates.
          */
         try {
-            html = domEditor.replacePlaceholders(html, finderSet, getEncoding());
-            String jsp = html; // MAIN_PAGE_DIRECTIVE + html ;
+            String jsp = domEditor.replacePlaceholders(html, finderSet, getEncoding());
 
             boolean exists = _destFile.exists();
 
@@ -772,12 +767,7 @@ public class JSPBuilder implements FileListener, Logger {
      * FIXME: use proper logger passed in at construction.
      */
     public void log(String msg) {
-        System.out.println("[" + this.getClass().getName() + "] " + msg /*
-                                                                         * +
-                                                                         * "\n" +
-                                                                         * this.toString ()
-                                                                         */
-        );
+        System.out.println("[" + this.getClass().getName() + "] " + msg);
     }
 
     public void log(String message, Exception e) {
