@@ -49,7 +49,7 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 /**
- * This class responds to messages about files that have been added, modifed or
+ * This class responds to messages about files that have been added, modified or
  * deleted by creating a JSP or deleting a JSP.
  * 
  * There are two stages in processing the HTML to become the JSP.
@@ -72,7 +72,7 @@ import org.xml.sax.SAXException;
  * Here is a HTML page with SAH. All text is literal, ie if it says
  * 'the-link-goes-here' that is exactly what is in the page. One of the main
  * points of SAH is to allow designers to work in a natural way and this
- * includes the use of placeholders to allow productions ofwell-formed HTML and
+ * includes the use of placeholders to allow production of well-formed HTML and
  * demos of static versions of sites.
  * 
  * <html><head><title>Example of Server Active HTML</title></head> <body>
@@ -162,7 +162,7 @@ import org.xml.sax.SAXException;
  * </tr>
  * \n"
  * 
- * and then the HTML is assemebled like this
+ * and then the HTML is assembled like this
  * 
  * html = news-item [ 0 ] + mTheLink + news-item [ 1 ] + theTitle + news-item [
  * 2 ] + theTimeStamp + news-item [ 3 ]
@@ -184,7 +184,7 @@ import org.xml.sax.SAXException;
  * <!-- name="news" --> ... <!-- name="/news" -->
  * 
  * In this example a linked template is shown. The HTML between the tags is a
- * design note btween designers and is stripped from the HTML during the SAH
+ * design note between designers and is stripped from the HTML during the SAH
  * processing stage.
  * 
  * <html><head><title>Example of Server Active HTML</title></head> <body>
@@ -204,7 +204,7 @@ import org.xml.sax.SAXException;
  * logon.html templates.html index.html about/ _include/ headers.html
  * templates.html about.html
  * 
- * The process seaches in this order until the template "contact" is found.
+ * The process searches in this order until the template "contact" is found.
  * 
  * about/_include/headers.html (No match) about/_include/templates.html (No
  * match) /_include/logon.html (No match) /_include/templates.html (Match)
@@ -271,7 +271,7 @@ import org.xml.sax.SAXException;
  * 
  * The JSP is embedded directly in the page being constructed.
  * 
- * If there is no applicaiton object named "search-result" the process saves the
+ * If there is no application object named "search-result" the process saves the
  * contents of the template into the same directory as it was found in as a JSP
  * suitable for inclusion with a <jsp:include> tag. The HTML included is the
  * concatenation of the elements of the template. Placeholder information is
@@ -688,7 +688,7 @@ public class JSPBuilder implements FileListener, Logger {
      * trees. Because we wrapped the page this will be exactly one object tree
      * with the deafult ServerActiveHtml object at the top. 3. For each object
      * tree emit the corresponding JSP script, resolving application code
-     * bingings relative to the current page. Supply a default application
+     * bindings relative to the current page. Supply a default application
      * binding where no binding is found.
      * 
      * @param html
@@ -714,7 +714,7 @@ public class JSPBuilder implements FileListener, Logger {
          * 1. Wrap the page.
          */
 
-        StringBuffer wrappedHtml = new StringBuffer(html.length() + 100);
+        StringBuilder wrappedHtml = new StringBuilder(html.length() + 100);
         wrappedHtml.append("<!-- name=\"-base\" -->");
         wrappedHtml.append(html);
         wrappedHtml.append("<!-- name=\"/-base\" -->");
@@ -748,19 +748,15 @@ public class JSPBuilder implements FileListener, Logger {
          * stopped using the default ServerActiveHtml which wraps the page) then
          * we need to use a loop here.
          */
-        ScriptWriter scWr;
-        String script;
         try {
             JspSerializable rootObject = (JspSerializable) tree.get(0);
-
-            scWr = new ScriptWriter(rootObject, getEncoding(), finderSet);
-
-            script = scWr.getScript();
+            
+            ScriptWriter scWr = new ScriptWriter(rootObject, getEncoding(), finderSet);
+            return scWr.getScript();
+            
         } catch (ScriptWriterException e) {
             throw new MarkedUpHtmlException("Failed to create script from object tree:\n" + e.toString());
         }
-        return script;
-
     }
 
     /**
