@@ -880,7 +880,7 @@ public class JSPBuilderTest extends TestCase {
                 + "<html><head><title>Template Page Title</title></head><body>Template Page Body</body></html>\n"
                 + "<!-- template = \"/full-page\" -->\n";
 
-        addDirectory(jspb, "_include");
+        addDirectory("_include");
         addFile(jspb, "_include/my-full-page-template.html", templateHtml);
 
         String htmlString = "<!-- use-template = \"full-page\" -->\n"
@@ -910,7 +910,7 @@ public class JSPBuilderTest extends TestCase {
                 + "<html><head><title>Template Page Title</title></head><body>Template Page Body</body></html>\n"
                 + "<!-- template = \"/full-page\" -->\n";
 
-        addDirectory(jspb, "_include");
+        addDirectory("_include");
         addFile(jspb, "_include/my-full-page-template.html", templateHtml);
 
         String htmlString = "<!-- use-template = \"full-page\" -->\n"
@@ -939,7 +939,7 @@ public class JSPBuilderTest extends TestCase {
                 + "<html><head><title>Template Page Title</title></head><body>" + "<date_long>"
                 + "Template Page Body</body></html>\n" + "<!-- template = \"/full-page\" -->\n";
 
-        addDirectory(jspb, "_include");
+        addDirectory("_include");
         addFile(jspb, "_include/my-full-page-template.html", templateHtml);
 
         String htmlString = "<!-- use-template = \"full-page\" -->\n"
@@ -1021,7 +1021,7 @@ public class JSPBuilderTest extends TestCase {
         String templateHtml = "<html><head><title>UTF-8 Templates</title></head><body>" + "<!-- template=\"utf-8\" -->"
                 + multibyteChars + "<!-- template =\"/utf-8\" -->" + "</body></html>";
 
-        addDirectory(jspb, "_include");
+        addDirectory("_include");
         addFile(jspb, "_include/utf-8-template.html", templateHtml, UTF_8);
 
         String jspString = addFile(jspb, "utf-8-in-templates.html", templateUsingPage, UTF_8);
@@ -1062,7 +1062,7 @@ public class JSPBuilderTest extends TestCase {
                 + "<!-- template=\"iso-8859-1\" -->" + isoChars + "<!-- template =\"/iso-8859-1\" -->"
                 + "</body></html>";
 
-        addDirectory(jspb, "_include");
+        addDirectory("_include");
         addFile(jspb, "_include/iso-88591-1-template.html", templateHtml, ISO_8859_1);
 
         String jspString = addFile(jspb, "iso-8859-1-in-templates.html", templateUsingPage, ISO_8859_1);
@@ -1142,7 +1142,7 @@ public class JSPBuilderTest extends TestCase {
     public void testTemplateArtifactsAreDeletedWhenTemplateDeleted() throws IOException, FileLocationException {
 
         JSPBuilder jspb = getJSPBuilder(Charset.forName(UTF_8));
-        addDirectory(jspb, "_include");
+        addDirectory("_include");
         final String TEMPLATES_HTML = "<html><head><title>Templates</title></head><body>"
                 + "<!-- template=\"a\" -->a<!-- template=\"/a\" -->"
                 + "<!-- template=\"b\" -->b<!-- template=\"/b\" -->" + "</body></html>";
@@ -1166,6 +1166,33 @@ public class JSPBuilderTest extends TestCase {
         assertEquals(0, jspIncludeDirectory.list().length);
     }
 
+    /**
+     * @throws FileLocationException 
+     * @throws IOException 
+     * 
+     */
+    public void testPostHeadMarkupInserted() throws IOException, FileLocationException{
+        JSPBuilder jspb = getJSPBuilder(Charset.forName(UTF_8));
+
+        /* Prepare the binding for the -post-head sao */
+        addDirectory("_application");
+        File appPropsFile = new File(m_SourceFolder+"/_application", "flush.properties");
+        String appPropsContent = "sao.-post-head.class-name = org.ntropa.runtime.sao.FlusherXXXXSAO";
+        writeHtmlToFile(appPropsFile, appPropsContent);
+
+        final String PAGE_NAME = "index.html";
+        final String PAGE_CONTENT = "<html><head><title>Post Head Markup</title></head>" +
+        // "<!-- name=\"-post-head\" --><!-- name=\"/-post-head\" -->" +
+        "<body></body></html>";
+
+        String indexJsp = addFile(jspb, PAGE_NAME, PAGE_CONTENT, UTF_8);
+
+        String[] expectedOrder = { "</head>", "new org.ntropa.runtime.sao.FlusherXXXXSAO ()",
+                "<body", "</body>", "</html>" };
+
+        checkStringsInOrder(expectedOrder, indexJsp);
+    }
+    
     public void _testReminder() {
         fail("Consider passing only the head to ParsedHtml reduce parse time.");
     }
@@ -1459,7 +1486,7 @@ assertTrue(f.delete());
      * @param htmlString
      *            The source HTML, as a designer would upload.
      */
-    private void addDirectory(JSPBuilder jspb, String dirName) throws IOException, FileLocationException {
+    private void addDirectory(String dirName) throws IOException, FileLocationException {
 
         File f = new File(m_SourceFolder, dirName);
         if (!f.mkdir())
@@ -1484,9 +1511,9 @@ assertTrue(f.delete());
         for (int i = 0; i < expectedSubstrings.length; i++) {
             int offset = targetString.indexOf(expectedSubstrings[i], lastOffset);
             if (offset == -1)
-                fail("The String does not have the string '" + expectedSubstrings[i] + "' in it.");
+                fail("The input does not have '" + expectedSubstrings[i] + "' in it.");
             if (offset < lastOffset)
-                fail("The String does not have the string '" + expectedSubstrings[i] + "' in the right position.");
+                fail("The input does not have '" + expectedSubstrings[i] + "' in the right position.");
             lastOffset = offset;
         }
     }
