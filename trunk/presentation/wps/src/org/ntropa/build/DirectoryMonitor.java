@@ -262,22 +262,6 @@ public class DirectoryMonitor {
 
     }
 
-    // // this is just for a test... but this will list all the files in the
-    // object
-    // // selected with their timestamps
-    // public void listFileDescription() {
-    // long m_t1 = System.currentTimeMillis();
-    // for (int c = 0; c < m_fd.size(); c++) {
-    // System.out.println(m_fd.getPath(c) + " == " + m_fd.getTimestamp(c));
-    // }
-    //
-    // System.out.println("\nRecursion time =" + (_initialScanMillis / 1000) + "
-    // seconds");
-    // System.out.println("Display Time =" + ((System.currentTimeMillis() -
-    // m_t1) / 1000) + " seconds");
-    // System.out.println("\n" + m_fd.size() + " Object[s] selected.");
-    // }
-
     /**
      * Recursively read all the files and directories in the specified
      * directory.
@@ -293,10 +277,11 @@ public class DirectoryMonitor {
 
         File fp[] = new File(directory).listFiles();
 
-        if (null == fp)
+        if (null == fp){
             throw new NullPointerException("File.listFiles() returned null: File.getAbsolutePath () = '"
                     + new File(directory).getAbsolutePath() + "'");
-
+        }
+        
         for (File f : fp) {
             String path = f.toString();
 
