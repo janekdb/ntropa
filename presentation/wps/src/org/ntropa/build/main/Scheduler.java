@@ -160,8 +160,11 @@ public class Scheduler implements Runnable {
 
             }
 
-            //statistics(System.currentTimeMillis() - curMillis);
-
+            /* TODO: Allow statistics to be turned on/off from the configuration file. */
+            if(false){
+                statistics(System.currentTimeMillis() - curMillis);
+            }
+            
             /*
              * Wait some time before checking all channels again.
              */
@@ -183,10 +186,9 @@ public class Scheduler implements Runnable {
             total += t;
         }
 
-        System.out.println("Millis for scan:     " + scanTime);
-        System.out.println("Average scan millis: " + (total / scanTimes.size()));
+        System.out.println("Millis for scan: " + scanTime+"  Rolling average: " + (total / scanTimes.size()));
 
-        if (scanTimes.size() >= 10) {
+        if (scanTimes.size() >= 20) {
             scanTimes.remove(0);
         }
 
