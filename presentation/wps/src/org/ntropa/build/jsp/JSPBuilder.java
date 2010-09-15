@@ -682,11 +682,11 @@ public class JSPBuilder implements FileListener, Logger {
      * 
      * PDL:
      * 
-     * 1. Wrap the page in a default ServerActiveHtml object for handling
+     * 1. Insert post head element markup. 2. Wrap the page in a default ServerActiveHtml object for handling
      * unhandled placeholders such as the globally applicable "date" and
-     * "opportunity-count" values. 2. Parse the HTML into a list of object
+     * "opportunity-count" values. 3. Parse the HTML into a list of object
      * trees. Because we wrapped the page this will be exactly one object tree
-     * with the deafult ServerActiveHtml object at the top. 3. For each object
+     * with the deafult ServerActiveHtml object at the top. 4. For each object
      * tree emit the corresponding JSP script, resolving application code
      * bindings relative to the current page. Supply a default application
      * binding where no binding is found.
@@ -711,7 +711,28 @@ public class JSPBuilder implements FileListener, Logger {
         }
 
         /*
-         * 1. Wrap the page.
+         * 1. Insert post head markup.
+         */
+        {
+            final String HEAD_CLOSE = "</head>";
+            int endOfHead = html.toLowerCase().indexOf(HEAD_CLOSE);
+            if (endOfHead < 0) {
+                // '-</head>'
+                //  01234567
+                // endOfHead = 1
+                // endOfHead + 7 = 8 = length of input.
+                log("build: </head> was missing for file: " + _sourceFile);
+            } else if (endOfHead + HEAD_CLOSE.length() == html.length()) {
+                log("build: No content after </head> for file: " + _sourceFile);
+            } else {
+                String head = html.substring(0, endOfHead + HEAD_CLOSE.length());
+                String tail = html.substring(endOfHead + HEAD_CLOSE.length());
+                html = head + "<!-- name=\"-post-head\" --><!-- name=\"/-post-head\" -->" + tail;
+            }
+        }
+     
+        /*
+         * 2. Wrap the page.
          */
 
         StringBuilder wrappedHtml = new StringBuilder(html.length() + 100);
@@ -719,6 +740,7 @@ public class JSPBuilder implements FileListener, Logger {
         wrappedHtml.append(html);
         wrappedHtml.append("<!-- name=\"/-base\" -->");
 
+        
         MarkedUpHtmlParser parser = new MarkedUpHtmlParser(wrappedHtml.toString());
 
         try {
