@@ -1,0 +1,10 @@
+<Project filename="&lt;&lt;unnamed project&gt;&gt;" projectName="Ntropa">
+  <Jar>/home/jdb/work/ntropa/build/lib/ntropa-build.jar</Jar>
+  <Jar>/home/jdb/work/ntropa/build/lib/ntropa-utility.jar</Jar>
+  <SrcDir>/home/jdb/work/ntropa/common/utility/src</SrcDir>
+  <SrcDir>/home/jdb/work/ntropa/presentation/sao/src</SrcDir>
+  <SrcDir>/home/jdb/work/ntropa/presentation/wps/src</SrcDir>
+  <SuppressionFilter>
+    <LastVersion value="-1" relOp="NEQ"/>
+  </SuppressionFilter>
+</Project>
