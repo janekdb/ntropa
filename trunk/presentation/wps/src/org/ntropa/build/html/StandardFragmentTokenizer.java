@@ -116,8 +116,8 @@ public class StandardFragmentTokenizer implements FragmentTokenizer {
       */
     "<!--\\s*(([\\w\\-]+)\\s*=\\s*\"([^\"]+)\"\\s*)+[^>]*-->" ;
     
-    static protected Pattern _pattern ;
-    static protected MalformedPatternException _patternException ;
+    private static final Pattern _pattern ;
+//    static protected MalformedPatternException _patternException ;
     
     private static final String PARSE_ATTRIBUTES_PATTERN =
      /*
@@ -126,7 +126,7 @@ public class StandardFragmentTokenizer implements FragmentTokenizer {
       */
     "([\\w\\-]+)\\s*=\\s*\"([^\"]+)\"" ;
     
-    static protected Pattern _parsePattern ;
+    private static final Pattern _parsePattern ;
     
     /* Static initialiser */
     static {
@@ -139,9 +139,10 @@ public class StandardFragmentTokenizer implements FragmentTokenizer {
             Perl5Compiler.READ_ONLY_MASK );
         }
         catch(MalformedPatternException e) {
-            /* Exceptions can not be thrown from static initialisers */
-            _pattern = null ;
-            _patternException = e ;
+            throw new RuntimeException(e);
+//            /* Exceptions can not be thrown from static initialisers */
+//            _pattern = null ;
+//            _patternException = e ;
         }
         
         try {
@@ -151,9 +152,10 @@ public class StandardFragmentTokenizer implements FragmentTokenizer {
             Perl5Compiler.READ_ONLY_MASK );
         }
         catch(MalformedPatternException e) {
-            /* Exceptions can not be thrown from static initialisers */
-            _parsePattern = null ;
-            _patternException = e ;
+            throw new RuntimeException(e);
+//            /* Exceptions can not be thrown from static initialisers */
+//            _parsePattern = null ;
+//            _patternException = e ;
         }
         
     }
@@ -351,10 +353,10 @@ public class StandardFragmentTokenizer implements FragmentTokenizer {
      */
     protected void init() {
         
-        /* delayed exception from static initialiser */
-        if ( _pattern == null ) {
-            throw new IllegalStateException( _patternException.toString() );
-        }
+//        /* delayed exception from static initialiser */
+//        if ( _pattern == null ) {
+//            throw new IllegalStateException( _patternException.toString() );
+//        }
         
         _matcher  = new Perl5Matcher();
         

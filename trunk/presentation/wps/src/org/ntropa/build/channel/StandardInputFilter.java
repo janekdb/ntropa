@@ -65,45 +65,39 @@ import org.ntropa.utility.FilePredicate;
  */
 public class StandardInputFilter implements FilePredicate {
     
-    static protected PatternMatcher _matcher ;
-    static protected Pattern _acceptableCharsPattern ;
-    static protected Pattern _htmlBackupPattern ;
-    static protected MalformedPatternException _patternException ;
+    private static final PatternMatcher _matcher ;
+    private static final Pattern _acceptableCharsPattern ;
+    private static final Pattern _htmlBackupPattern ;
     
     private static final String ACCEPTABLE_CHARS_PATTERN = "[a-zA-Z0-9\\-\\._]+" ;
     private static final String HTML_BACKUP_PATTERN = ".+\\.html.+" ;
     
     /* Static initialiser */
     static {
-        
+
         _matcher  = new Perl5Matcher () ;
-        
+
         PatternCompiler compiler = new Perl5Compiler ();
-        
+
         try {
             _acceptableCharsPattern = compiler.compile (
-            ACCEPTABLE_CHARS_PATTERN,
-            /* The READ_ONLY_MASK makes the compiled pattern thread safe */
-            Perl5Compiler.READ_ONLY_MASK );
-            
+                    ACCEPTABLE_CHARS_PATTERN,
+                    /* The READ_ONLY_MASK makes the compiled pattern thread safe */
+                    Perl5Compiler.READ_ONLY_MASK );
+
             _htmlBackupPattern = compiler.compile (
-            HTML_BACKUP_PATTERN,
-            /* The READ_ONLY_MASK makes the compiled pattern thread safe */
-            Perl5Compiler.READ_ONLY_MASK );
+                    HTML_BACKUP_PATTERN,
+                    /* The READ_ONLY_MASK makes the compiled pattern thread safe */
+                    Perl5Compiler.READ_ONLY_MASK );
         }
         catch(MalformedPatternException e) {
-            /* how can an exception be thrown from a static initialiser? */
-            _acceptableCharsPattern = null ;
-            _htmlBackupPattern = null ;
-            _patternException = e ;
+            throw new RuntimeException(e);
         }
     }
     
     
     /** Creates new StandardInputFilter */
     public StandardInputFilter () {
-        if ( _patternException != null )
-            throw new IllegalStateException ( "Failed to compile patterns\n" + _patternException.toString () ) ;
     }
     
     public boolean accept ( String file ) {

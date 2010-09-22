@@ -60,9 +60,9 @@ implements Deserializable, JspSerializable {
     //private static final String DEFAULT_COMPONENT_TYPE = "org.ntropa.runtime.sao.AbstractElement" ;
     private static final String DEFAULT_COMPONENT_TYPE = "com.studylink.sao.AbstractElement" ;
     
-    protected PatternMatcher _matcher ;
+    private PatternMatcher _matcher ;
     
-    protected PatternMatcherInput _input ;
+    private PatternMatcherInput _input ;
     
     private static final String SYSTEM_PLACEHOLDER_PATTERN =
      /*
@@ -79,10 +79,9 @@ implements Deserializable, JspSerializable {
       */
     //  "<!--\\s*(([\\w\\-]+)\\s*=\\s*\"([^\"]+)\"\\s*)+[^>]*-->" ;
     "\\$\\$([\\w\\-]+)\\$\\$" ;
-    static protected Pattern _pattern ;
-    static protected MalformedPatternException _patternException ;
+    private static final Pattern _pattern ;
     
-    static protected Pattern _parsePattern ;
+//    private static final Pattern _parsePattern ;
     
     /* Static initialiser */
     static {
@@ -95,9 +94,7 @@ implements Deserializable, JspSerializable {
             Perl5Compiler.READ_ONLY_MASK );
         }
         catch(MalformedPatternException e) {
-            /* Exceptions can not be thrown from static initialisers */
-            _pattern = null ;
-            _patternException = e ;
+            throw new RuntimeException(e);
         }
         
     }

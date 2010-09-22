@@ -364,7 +364,7 @@ public class JSPBuilder implements FileListener, Logger {
 
     private static StandardFilePredicate _isTemplatePage;
 
-    protected static String INCLUDE_DIR;
+    protected static final String INCLUDE_DIR;
 
     private static final String ERROR_HTML_OPEN = "<html><head><title>Build Error</title>" + "<!--"
             + DOMEditor.META_CONTENT_TYPE_PLACEHOLDER + "-->" + "</head>"
