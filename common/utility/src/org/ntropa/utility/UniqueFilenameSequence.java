@@ -47,7 +47,7 @@ public class UniqueFilenameSequence {
     }
     
     public String next () {
-        String s = "" + m_prefix++ + "-" + Math.abs ( m_r.nextInt () ) ;
+        String s = "" + m_prefix++ + "-" + m_r.nextInt (1000*1000) ;
         return s ;
     }
     
