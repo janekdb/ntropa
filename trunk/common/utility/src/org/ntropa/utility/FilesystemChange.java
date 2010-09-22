@@ -86,7 +86,7 @@ public class FilesystemChange {
         
         boolean verbose = false ;
         // Make 1 - 100 changes.
-        int changeCnt = Math.abs ( m_random.nextInt () ) % 100 + 1 ;
+        int changeCnt = m_random.nextInt (100)+1;
         if ( verbose )
             System.out.print ("Making changes:" );
         for ( int changeIDX = 1 ; changeIDX <= changeCnt ; changeIDX++ ) {
